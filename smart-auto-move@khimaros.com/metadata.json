@@ -1,0 +1,11 @@
+{
+    "uuid": "smart-auto-move@khimaros.com",
+    "name": "Smart Auto Move",
+    "url": "https://github.com/khimaros/smart-auto-move",
+    "description": "Smart Auto Move learns the locations of your application windows and moves them to the correct place on launch.",
+    "original-author": "khimaros",
+    "version": "0.1.0",
+    "shell-version": [
+        "41"
+    ]
+}
