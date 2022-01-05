@@ -3,8 +3,10 @@
     "name": "Smart Auto Move",
     "url": "https://github.com/khimaros/smart-auto-move",
     "description": "Smart Auto Move learns the locations of your application windows and moves them to the correct place on launch.",
+		"settings-schema": "org.gnome.shell.extensions.smart-auto-move",
+    "settings-path": "/org/gnome/shell/extensions/smart-auto-move/",
     "original-author": "khimaros",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "shell-version": [
         "41"
     ]

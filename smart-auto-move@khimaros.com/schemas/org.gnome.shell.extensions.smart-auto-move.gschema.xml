@@ -1,0 +1,14 @@
+<schemalist gettext-domain="gnome-shell-extensions">
+  <schema id="org.gnome.shell.extensions.smart-auto-move" path="/org/gnome/shell/extensions/smart-auto-move/">
+    <key name="saved-window-prototype-json" type="s">
+      <default>'{}'</default>
+      <summary>Saved Window Prototype JSON</summary>
+      <description>Data about a single saved window.</description>
+    </key>
+    <key name="session-prototype-json" type="s">
+			<default>'{}'</default>
+      <summary>All data for the session</summary>
+      <description></description>
+    </key>
+  </schema>
+</schemalist>

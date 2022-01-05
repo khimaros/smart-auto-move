@@ -4,56 +4,100 @@ const Main = imports.ui.main;
 const Shell = imports.gi.Shell;
 const Mainloop = imports.mainloop;
 const St = imports.gi.St;
-
 const ExtensionUtils = imports.misc.extensionUtils;
+const Clutter = imports.gi;
+
 const Me = ExtensionUtils.getCurrentExtension();
+const Settings = ExtensionUtils.getSettings();
+const AppSystem = Shell.AppSystem.get_default();
 
+const DEBUG_LOGGING = true;
 const WINDOW_RESTORE_DELAY_MS = 4000;
+const WINDOW_SAVE_DELAY_MS = 2500;
 const WINDOW_RESTORE_MATCH_THRESHOLD = 0.7;
-
-let appSystem = Shell.AppSystem.get_default();
+const WINDOW_SYNC_TIMEOUT_MS = 50;
+const SESSION_SAVE_TIMEOUT_MS = 15000;
 
 let savedWindows = new Object();
 let seenWindows = new Map();
+
+let panelButton;
 let windowSignals = new Map();
 let appSignals = new Map();
 let appSystemSignals = new Array();
+let timeoutSyncSignal;
+let timeoutSaveSignal;
 
 //// EXTENSION LIFECYCLE
 
 function init() {
-	log('[smart-auto-move] init()');
+	debug('init()');
 }
 
 function enable() {
-	log('[smart-auto-move] enable()');
+	debug('enable()');
 
-	appSystem.get_running().forEach(function (app) {
-		handleAppStateChanged(appSystem, app);
+	/*
+	AppSystem.get_running().forEach(function (app) {
+		handleAppStateChanged(AppSystem, app);
 	});
+	connectSignals();
+	*/
 
-	connectAppSystemSignals(appSystem);
+	connectTimeoutSignals();
 
-	//let timeout = Mainloop.timeout_add(5000, handleMainloopTimeout);
+	createPanelMenu();
 }
 
 function disable() {
-	log('[smart-auto-move] disable()');
+	debug('disable()');
+
+	//disconnectSignals();
 
 	removeTimeouts();
 
-	disconnectSignals();
+	removePanelMenu();
 }
 
-//// WINDOW UTILS
+//// SETTINGS
+
+function restoreSettings() {
+	debug('restoreSettings()');
+}
+
+function saveSettings() {
+	debug('saveSettings()');
+}
+
+//// WINDOW UTILITIES
 
 function windowReady(win) {
 	let win_rect = win.get_frame_rect();
-	if (win_rect.width === 0 || win_rect.height === 0) return false;
+	//if (win.get_title() === 'Loading…') return false;
+	if (win_rect.width === 0 && win_rect.height === 0) return false;
+	if (win_rect.x === 0 && win_rect.y === 0) return false;
 	return true;
 }
 
-function windowToSaved(win) {
+function waitForWindow(win) {
+	debug('waitForWindow() - start: ' + win.get_id());
+	let start = Date.now();
+	let notify = 1000; // Math.floor(WINDOW_RESTORE_DELAY_MS / 4)
+	while (!windowReady(win)) {
+		let duration = Date.now() - start;
+		if (duration % notify === 0) {
+			debug('waitForWindow() - waiting: ' + windowRepr(win));
+		}
+		if (duration >= WINDOW_RESTORE_DELAY_MS) {
+			debug('waitForWindow() - timeout: ' + win.get_id());
+			return false;
+		}
+	};
+	debug('waitForWindow() - ready: ' + win.get_id());
+	return true;
+}
+
+function windowData(win) {
 	let win_rect = win.get_frame_rect();
 	return {
 		id: win.get_id(),
@@ -70,6 +114,10 @@ function windowToSaved(win) {
 	}
 }
 
+function windowRepr(win) {
+	return JSON.stringify(windowData(win));
+}
+
 function appHash(app) {
 	return app.get_id();
 }
@@ -82,48 +130,66 @@ function windowHash(win) {
 	return win.get_id();
 }
 
-//// WINDOW SAVE
+function windowDataEqual(sw1, sw2) {
+	return JSON.stringify(sw1) === JSON.stringify(sw2);
+}
+
+function windowNewerThan(win, age) {
+	let wh = windowHash(win);
+
+	if (seenWindows.get(wh) === undefined) {
+		seenWindows.set(wh, Date.now());
+	}
+
+	return (Date.now() - seenWindows.get(wh) < age);
+}
+
+function sleep(duration) {
+	let start = Date.now();
+	while (true) {
+		if (Date.now() - start >= duration)
+			return;
+	}
+}
+
+//// WINDOW SAVE / RESTORE
 
 function pushSavedWindow(win) {
 	let wsh = windowSectionHash(win);
-	log('[smart-auto-move] pushSavedWindow() - start: ' + wsh + ', ' + win.get_title());
-	if (wsh === null) return;
+	//debug('pushSavedWindow() - start: ' + wsh + ', ' + win.get_title());
+	if (wsh === null) return false;
 	if (!savedWindows.hasOwnProperty(wsh))
 		savedWindows[wsh] = new Array();
-	let sw = windowToSaved(win);
+	let sw = windowData(win);
 	savedWindows[wsh].push(sw);
-	log('[smart-auto-move] pushSavedWindow() - pushed: ' + JSON.stringify(sw));
+	debug('pushSavedWindow() - pushed: ' + JSON.stringify(sw));
+	return true;
 }
 
 function updateSavedWindow(win) {
 	let wsh = windowSectionHash(win);
-	log('[smart-auto-move] updateSavedWindow() - search: ' + wsh + ', ' + win.get_title());
+	//debug('updateSavedWindow() - start: ' + wsh + ', ' + win.get_title());
 	let swi = findSavedWindow(wsh, { sequence: win.get_stable_sequence() }, 1.0);
 	if (swi === undefined)
 		return false;
-	let sw = windowToSaved(win);
+	let sw = windowData(win);
+	if (windowDataEqual(savedWindows[wsh][swi], sw)) return true;
 	savedWindows[wsh][swi] = sw;
-	log('[smart-auto-move] updateSavedWindow() - saved: ' + swi + ', ' + JSON.stringify(sw));
+	debug('updateSavedWindow() - updated: ' + swi + ', ' + JSON.stringify(sw));
 	return true;
 }
 
 function saveWindow(win) {
-	log('[smart-auto-move] ensureSavedWindow()');
+	let wh = windowHash(win);
+
+	if (windowNewerThan(win, WINDOW_SAVE_DELAY_MS)) return;
+
+	//debug('saveWindow(): ' + win.get_id());
+
 	if (!updateSavedWindow(win)) {
 		pushSavedWindow(win);
 	}
 }
-
-function saveCurrentWindows() {
-	//savedWindows = new Object();
-	global.get_window_actors().forEach(function (actor) {
-		let win = actor.get_meta_window();
-		saveWindow(win);
-	});
-	log('[smart-auto-move] saveCurrentWindows(): ' + JSON.stringify(savedWindows));
-}
-
-//// WINDOW RESTORE
 
 function levensteinDistance(a, b) {
 	var m = [], i, j, min = Math.min;
@@ -147,10 +213,10 @@ function levensteinDistance(a, b) {
 }
 
 function findSavedWindow(wsh, query, threshold) {
-	log('[smart-auto-move] findSavedWindow() - search: ' + wsh + ', ' + JSON.stringify(query) + ' threshold: ' + threshold);
+	//debug('findSavedWindow() - search: ' + wsh + ', ' + JSON.stringify(query) + ' threshold: ' + threshold);
 
 	if (!savedWindows.hasOwnProperty(wsh)) {
-		log('[smart-auto-move] findSavedWindow() - no such window: ' + wsh)
+		//debug('findSavedWindow() - no such window: ' + wsh)
 		return undefined;
 	}
 
@@ -174,7 +240,7 @@ function findSavedWindow(wsh, query, threshold) {
 
 	let sorted_scores = new Map([...scores.entries()].sort((a, b) => b[1] - a[1]));
 
-	log('[smart-auto-move] findSavedWindow() - sorted_scores: ' + JSON.stringify(Array.from(sorted_scores.entries())));
+	//debug('findSavedWindow() - sorted_scores: ' + JSON.stringify(Array.from(sorted_scores.entries())));
 
 	let best_swi = sorted_scores.keys().next().value;
 	let best_score = sorted_scores.get(best_swi);
@@ -183,55 +249,91 @@ function findSavedWindow(wsh, query, threshold) {
 	if (best_score >= threshold)
 		found = best_swi;
 
-	log('[smart-auto-move] findSavedWindow() - found: ' + found);
+	//debug('findSavedWindow() - found: ' + found + ' ' + JSON.stringify(savedWindows[wsh][found]));
 
 	return found;
+}
+
+function moveWindow(win, sw) {
+	//debug('moveWindow(): ' + JSON.stringify(sw));
+	let ws = global.workspaceManager.get_workspace_by_index(sw.workspace);
+	win.change_workspace(ws);
+	win.move_resize_frame(false, sw.x, sw.y, sw.width, sw.height);
+	if (sw.maximized) win.maximize(sw.maximized);
+	win.move_resize_frame(false, sw.x, sw.y, sw.width, sw.height);
+	if (sw.maximized) win.maximize(sw.maximized);
+	win.move_resize_frame(false, sw.x, sw.y, sw.width, sw.height);
+
+	let nsw = windowData(win);
+
+	/*
+	nsw.x = sw.x;
+	nsw.y = sw.y;
+	nsw.width = sw.width;
+	nsw.height = sw.height;
+	nsw.maximized = sw.maximized;
+	nsw.workspace = sw.workspace;
+	*/
+
+	return nsw;
 }
 
 function restoreWindow(win) {
 	let wsh = windowSectionHash(win);
 
-	let swi = findSavedWindow(wsh, { title: win.get_title(), occupied: false }, WINDOW_RESTORE_MATCH_THRESHOLD);
+	//if (! windowNewerThan(win, WINDOW_RESTORE_DELAY_MS)) return false;
+	
+	let swi = findSavedWindow(wsh, { hash: windowHash(win), occupied: true }, 1.0);
+
+	if (swi !== undefined) return false;
+
+	swi = findSavedWindow(wsh, { title: win.get_title(), occupied: false }, WINDOW_RESTORE_MATCH_THRESHOLD);
 
 	if (swi === undefined) return false;
 
+	// update sequence even if the window never becomes ready
+	// so that we don't duplicate savedWindow data.
+	savedWindows[wsh][swi].sequence = win.get_stable_sequence();
+
+	//if (!waitForWindow(win)) return true;
+
+	if (!windowReady(win)) return true;
+
+	//blockWindowHandlers(win);
+
 	let sw = savedWindows[wsh][swi];
 
-	log('[smart-auto-move] restoreWindow() - start: ' + JSON.stringify(sw));
+	if (windowDataEqual(sw, windowData(win))) return true;
 
-	//while (!windowReady(win));
+	debug('restoreWindow() - found: ' + JSON.stringify(sw));
 
-	let ws = global.workspaceManager.get_workspace_by_index(sw.workspace);
-	win.change_workspace(ws);
-	if (sw.maximized) win.maximize(sw.maximized);
-	win.move_resize_frame(false, sw.x, sw.y, sw.width, sw.height);
+	let pWinRepr = windowRepr(win);
 
-	sw = windowToSaved(win);
-	savedWindows[wsh][swi] = sw;
+	let nsw = moveWindow(win, sw);
 
-	log('[smart-auto-move] restoreWindow() - restored: ' + JSON.stringify(sw));
+	if (! (sw.x === nsw.x && sw.y === nsw.y)) return true;
+
+	debug('restoreWindow() - moved: ' + pWinRepr + ' => ' + JSON.stringify(nsw));
+
+	savedWindows[wsh][swi] = nsw;
+
+	//unblockWindowHandlers(win);
 
 	return true;
 }
 
-function restoreSavedWindows() {
-	log('[smart-auto-move] restoreSavedWindows(): ' + JSON.stringify(savedWindows));
-
-	global.get_window_actors().forEach(function (actor) {
-		let win = actor.get_meta_window();
-		restoreWindow(win);
+function restoreOrSaveUnseenWindows(app) {
+	app.get_windows().forEach(function (win) {
+		if (!restoreWindow(win))
+			saveWindow(win);
 	});
 }
 
-function restoreOrSaveUnseenWindows(app) {
-	app.get_windows().forEach(function (win) {
-		let wh = windowHash(win);
-
-		if (seenWindows.get(wh) !== undefined) return;
-		seenWindows.set(wh, true);
-
-		if (!restoreWindow(win))
-			saveWindow(win);
+function restoreSavedWindows() {
+	//debug('restoreSavedWindows(): ' + JSON.stringify(savedWindows));
+	global.get_window_actors().forEach(function (actor) {
+		let win = actor.get_meta_window();
+		restoreWindow(win);
 	});
 }
 
@@ -247,19 +349,157 @@ function cleanupWindows() {
 		let sws = savedWindows[wsh];
 		sws.forEach(function (sw) {
 			if (sw.occupied && !found.has(sw.hash)) {
-				log('[smart-auto-move] cleaning up occupied window: ' + sw.hash)
 				sw.occupied = false;
+				debug('cleanupWindows() - deoccupy: ' + JSON.stringify(sw));
 			}
 		});
 	});
 }
 
+function syncWindows() {
+	/*
+	debug('------------------------------------------------------');
+	debug('syncWindows() - start');
+	dumpState();
+	*/
+
+	cleanupWindows();
+	global.get_window_actors().forEach(function (actor) {
+		let win = actor.get_meta_window();
+		if (!restoreWindow(win))
+			saveWindow(win);
+	});
+
+	/*
+	debug('syncWindows() - end');
+	dumpState();
+	debug('------------------------------------------------------');
+	*/
+}
+
+//// GUI UTILITIES
+
+function createPanelMenu() {
+	panelButton = new St.Bin({
+		style_class: "panel-button",
+		reactive: true,
+	});
+	let icon = new St.Icon({
+		icon_name: 'security-low-symbolic',
+		style_class: 'system-status-icon',
+	});
+	panelButton.set_child(icon);
+	//panelButton.connect('button-press-event', syncWindows)
+	panelButton.connect('button-press-event', dumpState);
+	/*
+	let panelButtonText = new St.Label({
+		text: "Sync",
+		y_align: Clutter.ActorAlign.CENTER,
+	});
+	panelButton.set_child(panelButtonText);
+	*/
+	Main.panel._rightBox.insert_child_at_index(panelButton, 0);
+}
+
+function removePanelMenu() {
+	Main.panel._rightBox.remove_child(panelButton);
+}
+
+//// SIGNAL HANDLERS
+
+function handleTimeoutSave() {
+	debug('handleTimeoutSave(): ' + JSON.stringify(savedWindows));
+	//saveCurrentWindows();
+	//restoreSavedWindows();
+	//dumpCurrentWindows();
+	timeoutSaveSignal = Mainloop.timeout_add(SESSION_SAVE_TIMEOUT_MS, handleTimeoutSave);
+}
+
+function handleTimeoutSync() {
+	//debug('handleTimeoutSync()');
+	syncWindows();
+	timeoutSyncSignal = Mainloop.timeout_add(WINDOW_SYNC_TIMEOUT_MS, handleTimeoutSync);
+}
+
+function handleAppStateChanged(appSys, app) {
+	/*
+	if (app.state === Shell.AppState.STOPPED)
+		disconnectAppSignals(app);
+	*/
+
+	if (app.state !== Shell.AppState.RUNNING) return;
+
+	// TODO: wait until app is finished loading.
+	//while (app.is_busy());
+
+	if (app.get_name() === "Unknown") return;
+
+	let ah = appHash(app);
+
+	debug('handleAppStateChanged(): ' + app.get_name() + ' ' + ah + ' state ' + app.state);
+
+	handleAppWindowsChanged(app);
+
+	connectAppSignals(app);
+}
+
+function handleAppWindowsChanged(app) {
+	debug('handleAppWindowsChanged(): ' + app.get_name());
+	connectAppSignals(app);
+	cleanupWindows();
+	let timeout = Mainloop.timeout_add(2000, function () { restoreOrSaveUnseenWindows(app); });
+}
+
+function handleNotifyWindowTitle(win) {
+	//if (!windowReady(win)) return;
+	debug('handleNotifyWindowTitle(): ' + win.get_title());
+	if (win.get_title() === null) return;
+	updateSavedWindow(win);
+}
+
+function handleWindowSizeChanged(win) {
+	let win_rect = win.get_frame_rect();
+	if (win_rect.height === 0 && win_rect.width === 0) return;
+	// TODO: debounce
+	debug('handleWindowSizeChanged(): ' + win.get_title());
+	updateSavedWindow(win);
+}
+
+function handleWindowPositionChanged(win) {
+	let win_rect = win.get_frame_rect();
+	if (win_rect.x === 0 && win_rect.y === 0) return;
+	// TODO: debounce
+	debug('handleWindowPositionChanged(): ' + win.get_title());
+	updateSavedWindow(win);
+}
+
+function handleWindowWorkspaceChanged(win) {
+	if (win.get_workspace() === null) return;
+	debug('handleWindowWorkspaceChanged(): ' + win.get_title());
+	updateSavedWindow(win);
+}
+
+function handleWindowFocus(win) {
+	debug('handleWindowFocus(): ' + win.get_title());
+}
+
 //// SIGNAL HELPERS
+
+function connectSignals() {
+	//Settings.connect('changed', handleSettingsChanged);
+	// TODO: maybe use Workspace::window-added / Workspace::window-removed instead of App::WindowChanged?
+	connectAppSystemSignals(AppSystem);
+}
+
+function connectTimeoutSignals() {
+	//timeoutSaveSignal = Mainloop.timeout_add(SESSION_SAVE_TIMEOUT_MS, handleTimeoutSave);
+	timeoutSyncSignal = Mainloop.timeout_add(WINDOW_SYNC_TIMEOUT_MS, handleTimeoutSync);
+}
 
 function connectWindowSignals(win) {
 	let wh = windowHash(win);
 	if (windowSignals.has(wh)) return;
-	log('[smart-auto-move] connecting signals for window ' + win.get_title() + ' ' + wh);
+	debug('connectWindowSignals(): ' + win.get_title() + ' ' + wh);
 	// https://gjs-docs.gnome.org/meta9~9_api/meta.window
 	let s1 = win.connect('workspace-changed', handleWindowWorkspaceChanged);
 	let s2 = win.connect('size-changed', handleWindowSizeChanged);
@@ -275,19 +515,19 @@ function connectAppSignals(app) {
 	});
 	let ah = appHash(app);
 	if (appSignals.has(ah)) return;
-	log('[smart-auto-move] connecting signals for app ' + app.get_name() + ' ' + ah);
+	debug('connectAppSignals(): ' + app.get_name() + ' ' + ah);
 	let s1 = app.connect('windows-changed', handleAppWindowsChanged);
 	appSignals.set(ah, s1);
 }
 
 function connectAppSystemSignals(appSys) {
-	let s1 = appSystem.connect('app-state-changed', handleAppStateChanged);
+	let s1 = AppSystem.connect('app-state-changed', handleAppStateChanged);
 	appSystemSignals = [s1];
 }
 
 function disconnectAppSignals(app) {
 	let ah = appHash(app);
-	log('[smart-auto-move] disconnecting signals for App ' + app.get_name() + ' ' + ah);
+	debug('disconnectAppSignals(): ' + app.get_name() + ' ' + ah);
 	app.disconnect(appSignals.get(ah));
 	appSignals.delete(ah);
 	app.get_windows().forEach(function (win) {
@@ -297,7 +537,7 @@ function disconnectAppSignals(app) {
 
 function disconnectWindowSignals(win) {
 	let wh = windowHash(win);
-	log('[smart-auto-move] disconnecting signals for Window ' + win.get_title() + ' ' + wh);
+	debug('disconnectWindowSignals(): ' + win.get_title() + ' ' + wh);
 	windowSignals.get(wh).forEach(function (signal) {
 		win.disconnect(signal);
 	});
@@ -305,97 +545,62 @@ function disconnectWindowSignals(win) {
 }
 
 function disconnectAppSystemSignals(appSys) {
-	log('[smart-auto-move] disconnecting signals for AppSystem');
+	debug('disconnectAppSystemSignals()');
 	appSystemSignals.forEach(function (signal) {
-		appSystem.disconnect(signal);
+		AppSystem.disconnect(signal);
 	});
 	appSystemSignals = new Array();
 }
 
 function disconnectSignals() {
-	log('[smart-auto-move] disconnecting all signals');
-	appSystem.get_running().forEach(function (app) {
+	debug('disconnectingSignals()');
+	AppSystem.get_running().forEach(function (app) {
 		disconnectAppSignals(app);
 	});
-	disconnectAppSystemSignals(appSystem);
+	disconnectAppSystemSignals(AppSystem);
+}
+
+function blockWindowHandlers(win) {
+	findWindowHandlers(win).forEach(function (signal) {
+		win.block_signal_handler(signal);
+	});
+}
+
+function unblockWindowHandlers(win) {
+	findWindowHandlers(win).forEach(function (signal) {
+		win.unblock_signal_handler(signal);
+	});
+}
+
+function findWindowHandlers(win) {
+	let wh = windowHash(win);
+	return windowSignals.get(wh);
 }
 
 function removeTimeouts() {
-	// TODO: cleanup timeout on disable.
-	//Mainloop.source_remove(timeout);
+	Mainloop.source_remove(timeoutSyncSignal);
+	//Mainloop.source_remove(timeoutSaveSignal);
 	return;
 }
 
-//// SIGNAL HANDLERS
-
-function handleMainloopTimeout() {
-	log('[smart-auto-move] handleMainloopTimeout(): ' + JSON.stringify(savedWindows));
-	//saveCurrentWindows();
-	//restoreSavedWindows();
-	dumpCurrentWindows();
-	let timeout = Mainloop.timeout_add(5000, handleMainloopTimeout);
-}
-
-function handleNotifyWindowTitle(win) {
-	log('[smart-auto-move] handleNotifyWindowTitle(): ' + win.get_title());
-	if (win.get_title() === null) return;
-	if (win.get_title() === 'Loading…') return;
-	updateSavedWindow(win);
-	//ensureSavedWindow(win);
-}
-
-function handleAppStateChanged(appSys, app) {
-	/*
-	if (app.state === Shell.AppState.STOPPED)
-		disconnectAppSignals(app);
-	*/
-
-	if (app.state !== Shell.AppState.RUNNING) return;
-
-	//while (app.is_busy());
-
-	if (app.get_name() === "Unknown") return;
-
-	let ah = appHash(app);
-
-	log('[smart-auto-move] handleAppStateChanged(): ' + app.get_name() + ' ' + ah + ' state ' + app.state);
-
-	//restoreOrSaveUnseenWindows(app);
-
-	handleAppWindowsChanged(app);
-
-	connectAppSignals(app);
-}
-
-function handleAppWindowsChanged(app) {
-	log('[smart-auto-move] handleAppWindowsChanged(): ' + app.get_name());
-	connectAppSignals(app);
-	cleanupWindows();
-	let timeout = Mainloop.timeout_add(WINDOW_RESTORE_DELAY_MS, function () {
-		restoreOrSaveUnseenWindows(app);
-	});
-}
-
-function handleWindowSizeChanged(win) {
-	log('[smart-auto-move] handleWindowSizeChanged(): ' + win.get_title());
-	updateSavedWindow(win);
-}
-
-function handleWindowWorkspaceChanged(win) {
-	log('[smart-auto-move] handleWindowWorkspaceChanged(): ' + win.get_title());
-	updateSavedWindow(win);
-}
-
-function handleWindowPositionChanged(win) {
-	log('[smart-auto-move] handleWindowPositionChanged(): ' + win.get_title());
-	updateSavedWindow(win);
-}
-
-function handleWindowFocus(win) {
-	log('[smart-auto-move] handleWindowFocus(): ' + win.get_title());
-}
-
 //// DEBUG UTILITIES
+
+function debug(message) {
+	if (DEBUG_LOGGING) {
+		log('[smart-auto-move] ' + message);
+	}
+}
+
+function dumpSavedWindows() {
+	debug('dumpSavedwindows(): ' + JSON.stringify(savedWindows));
+	/*
+	Object.keys(savedWindows).forEach(function (wsh) {
+		let sws = savedWindows[wsh];
+		sws.forEach(function (sw) {
+		});
+	});
+	*/
+}
 
 function dumpCurrentWindows() {
 	global.get_window_actors().forEach(function (actor) {
@@ -405,16 +610,10 @@ function dumpCurrentWindows() {
 }
 
 function dumpWindow(win) {
-	log('\n[smart-auto-move] dumpWindow()\n' +
-		'  stable_sequence: ' + win.get_stable_sequence() + '\n' +
-		'  title: ' + win.get_title() + '\n' +
-		'  wm_class: ' + win.get_wm_class() + '\n' +
-		'  wm_class_instance: ' + win.get_wm_class_instance() + '\n' +
-		'  id: ' + win.get_id() + '\n' +
-		'  startup_id: ' + win.get_startup_id() + '\n' +
-		'  role: ' + win.get_role() + '\n' +
-		'  pid: ' + win.get_pid() + '\n' +
-		'\n');
+	debug('dumpWindow(): ' + windowRepr(win));
 }
 
-
+function dumpState() {
+	dumpSavedWindows();
+	dumpCurrentWindows();
+}

@@ -5,8 +5,14 @@ clean:
 pack: smart-auto-move@khimaros.com.shell-extension.zip
 .PHONY: pack
 
-smart-auto-move@khimaros.com.shell-extension.zip: ./smart-auto-move@khimaros.com/*
+smart-auto-move@khimaros.com.shell-extension.zip: schemas ./smart-auto-move@khimaros.com/*
 	gnome-extensions pack --force ./smart-auto-move@khimaros.com/
+
+smart-auto-move@khimaros.com/schemas/gschemas.compiled: smart-auto-move@khimaros.com/schemas/*.gschema.xml
+	glib-compile-schemas ./smart-auto-move@khimaros.com/schemas/
+
+schemas: smart-auto-move@khimaros.com/schemas/gschemas.compiled
+.PHONY: schemas
 
 log:
 	journalctl -f /usr/bin/gnome-shell
