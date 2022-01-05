@@ -6,14 +6,15 @@ const St = imports.gi.St;
 const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
-const Settings = ExtensionUtils.getSettings();
 
-const DEBUG_LOGGING = true;
+const DEBUG_LOGGING = false;
 const WINDOW_SAVE_DELAY_MS = 2500;
 const WINDOW_RESTORE_MATCH_THRESHOLD = 0.7;
 const WINDOW_SYNC_TIMEOUT_MS = 50;
-const SESSION_SAVE_TIMEOUT_MS = 15000;
+const SESSION_SAVE_TIMEOUT_MS = 2000;
+const SESSION_SETTINGS_KEY = 'saved-windows';
 
+let settings;
 let savedWindows;
 let seenWindows;
 
@@ -30,7 +31,11 @@ function enable() {
 	debug('enable()');
 
 	savedWindows = new Object();
-	seenWindows = new Map();	
+	seenWindows = new Map();
+
+	settings = ExtensionUtils.getSettings();
+
+	restoreSettings();
 
 	connectTimeoutSignals();
 }
@@ -40,6 +45,10 @@ function disable() {
 
 	removeTimeouts();
 
+	saveSettings();
+
+	settings = null;
+
 	savedWindows = null;
 	seenWindows = null;
 }
@@ -48,10 +57,17 @@ function disable() {
 
 function restoreSettings() {
 	debug('restoreSettings()');
+	savedWindows = JSON.parse(settings.get_string(SESSION_SETTINGS_KEY));
+	dumpSavedWindows();
 }
 
 function saveSettings() {
+	let current = settings.get_string(SESSION_SETTINGS_KEY);
+	let session = JSON.stringify(savedWindows);
+	if (current === session) return;
 	debug('saveSettings()');
+	dumpSavedWindows();
+	settings.set_string(SESSION_SETTINGS_KEY, session);
 }
 
 //// WINDOW UTILITIES
@@ -214,6 +230,9 @@ function moveWindow(win, sw) {
 	win.change_workspace(ws);
 	win.move_resize_frame(false, sw.x, sw.y, sw.width, sw.height);
 	if (sw.maximized) win.maximize(sw.maximized);
+
+	// NOTE: these additional move/maximize operations were needed in order
+	// to convince Firefox to stay where we put it.
 	win.move_resize_frame(false, sw.x, sw.y, sw.width, sw.height);
 	if (sw.maximized) win.maximize(sw.maximized);
 	win.move_resize_frame(false, sw.x, sw.y, sw.width, sw.height);
@@ -286,10 +305,8 @@ function syncWindows() {
 //// SIGNAL HANDLERS
 
 function handleTimeoutSave() {
-	debug('handleTimeoutSave(): ' + JSON.stringify(savedWindows));
-	//saveCurrentWindows();
-	//restoreSavedWindows();
-	//dumpCurrentWindows();
+	//debug('handleTimeoutSave(): ' + JSON.stringify(savedWindows));
+	saveSettings();
 	timeoutSaveSignal = Mainloop.timeout_add(SESSION_SAVE_TIMEOUT_MS, handleTimeoutSave);
 }
 
@@ -303,15 +320,15 @@ function handleTimeoutSync() {
 
 function connectTimeoutSignals() {
 	timeoutSyncSignal = Mainloop.timeout_add(WINDOW_SYNC_TIMEOUT_MS, handleTimeoutSync);
-	//timeoutSaveSignal = Mainloop.timeout_add(SESSION_SAVE_TIMEOUT_MS, handleTimeoutSave);
+	timeoutSaveSignal = Mainloop.timeout_add(SESSION_SAVE_TIMEOUT_MS, handleTimeoutSave);
 }
 
 function removeTimeouts() {
 	Mainloop.source_remove(timeoutSyncSignal);
 	timeoutSyncSignal = null;
 
-	//Mainloop.source_remove(timeoutSaveSignal);
-	//timeoutSaveSignal = null;
+	Mainloop.source_remove(timeoutSaveSignal);
+	timeoutSaveSignal = null;
 }
 
 //// DEBUG UTILITIES

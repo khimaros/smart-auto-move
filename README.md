@@ -6,8 +6,6 @@ smart-auto-move is a Gnome Shell extension which keeps track of all application 
 
 ## limitations
 
-window locations are not currently persisted to disk. when the extension is restarted (eg. on logout), window positions will need to be retrained.
-
 terminals which include the current directory in the title may not reach the match threshold when restarted if they do not preserve the working directory across restarts.
 
 ## behavior
@@ -18,9 +16,7 @@ titles are matched using Levenstein distance. the match bonus for title is calcu
 
 ## installation
 
-smart-auto-move is currently under active development. when it is fully functional, it will be uploaded to https://extensions.gnome.org.
-
-in the meantime, if you'd like to test, see [#development](#development).
+install the extension from https://extensions.gnome.org/extension/4736/smart-auto-move/
 
 ## development
 
@@ -42,9 +38,9 @@ $ gnome-extensions enable smart-auto-move@khimaros.com
 
 if you make a change to the source code, you will need to exit the session and start a new one.
 
-# manual tests
+## manual tests
 
-## calculator
+### calculator
 
 - open calculator
 - move calculator position
@@ -54,7 +50,7 @@ if you make a change to the source code, you will need to exit the session and s
 - quickly close calculator
 - open calculator
 
-## files
+### files
 
 - open Places => Home
 - open a second Places => Home
@@ -68,7 +64,7 @@ if you make a change to the source code, you will need to exit the session and s
 - move Downloads to workspace 2
 - tile Downloads to the right
 
-## firefox
+### firefox
 
 - launch firefox
 - navigate to Wikipedia.org
