@@ -5,5 +5,30 @@
       <summary>Saved Windows</summary>
       <description>Persisted window data serialized to JSON.</description>
     </key>
+    <key name="debug-logging" type="b">
+      <default>false</default>
+      <summary>Debug Logging</summary>
+      <description>Write detailed logs about extension behavior.</description>
+    </key>
+    <key name="startup-delay" type="i">
+      <default>2500</default>
+      <summary>Startup Delay (ms)</summary>
+      <description>Period of time in milliseconds to wait between seeing a window and writing it to the in-memory store.</description>
+    </key>
+    <key name="sync-frequency" type="i">
+      <default>100</default>
+      <summary>Sync Frequency (ms)</summary>
+      <description>Frequency in milliseconds to synchronize changes to active windows into the in-memory store.</description>
+    </key>
+    <key name="save-frequency" type="i">
+      <default>1000</default>
+      <summary>Save Frequency (ms)</summary>
+      <description>Frequency in milliseconds to persist the in-memory store to disk.</description>
+    </key>
+    <key name="match-threshold" type="d">
+      <default>0.7</default>
+      <summary>Match Threshold</summary>
+      <description>Minimum threshold for matching restored windows.</description>
+    </key>
   </schema>
 </schemalist>

@@ -1,9 +1,9 @@
+ack: smart-auto-move@khimaros.com.shell-extension.zip
+.PHONY: pack
+
 clean:
 	rm ./smart-auto-move@khimaros.com.shell-extension.zip
 .PHONY: clean
-
-pack: smart-auto-move@khimaros.com.shell-extension.zip
-.PHONY: pack
 
 smart-auto-move@khimaros.com.shell-extension.zip: schemas ./smart-auto-move@khimaros.com/*
 	gnome-extensions pack --force ./smart-auto-move@khimaros.com/

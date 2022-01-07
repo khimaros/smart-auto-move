@@ -7,19 +7,38 @@ const ExtensionUtils = imports.misc.extensionUtils;
 
 const Me = ExtensionUtils.getCurrentExtension();
 
-const DEBUG_LOGGING = false;
-const WINDOW_SAVE_DELAY_MS = 2500;
-const WINDOW_RESTORE_MATCH_THRESHOLD = 0.7;
-const WINDOW_SYNC_TIMEOUT_MS = 50;
-const SESSION_SAVE_TIMEOUT_MS = 2000;
-const SESSION_SETTINGS_KEY = 'saved-windows';
+const DEFAULT_DEBUG_LOGGING = false;
+const DEFAULT_STARTUP_DELAY_MS = 2500;
+const DEFAULT_SYNC_FREQUENCY_MS = 100;
+const DEFAULT_SAVE_FREQUENCY_MS = 1000;
+const DEFAULT_MATCH_THRESHOLD = 0.7;
 
-let settings;
+const SETTINGS_SCHEMA = 'org.gnome.shell.extensions.smart-auto-move';
+const SETTINGS_KEY_SAVED_WINDOWS = 'saved-windows';
+const SETTINGS_KEY_DEBUG_LOGGING = 'debug-logging';
+const SETTINGS_KEY_STARTUP_DELAY = 'startup-delay';
+const SETTINGS_KEY_SYNC_FREQUENCY = 'sync-frequency';
+const SETTINGS_KEY_SAVE_FREQUENCY = 'save-frequency';
+const SETTINGS_KEY_MATCH_THRESHOLD = 'match-threshold';
+
+let debugLogging;
+let startupDelayMs;
+let syncFrequencyMs;
+let saveFrequencyMs;
+let matchThreshold;
+
 let savedWindows;
 let seenWindows;
 
+let settings;
+
 let timeoutSyncSignal;
 let timeoutSaveSignal;
+let changedDebugLoggingSignal;
+let changedStartupDelaySignal;
+let changedSyncFrequencySignal;
+let changedSaveFrequencySignal;
+let changedMatchThresholdSignal;
 
 //// EXTENSION LIFECYCLE
 
@@ -28,14 +47,24 @@ function init() {
 }
 
 function enable() {
-	debug('enable()');
+	debugLogging = DEFAULT_DEBUG_LOGGING;
+	startupDelayMs = DEFAULT_STARTUP_DELAY_MS;
+	syncFrequencyMs = DEFAULT_SYNC_FREQUENCY_MS;
+	saveFrequencyMs = DEFAULT_SAVE_FREQUENCY_MS;
+	matchThreshold = DEFAULT_MATCH_THRESHOLD;
 
 	savedWindows = new Object();
 	seenWindows = new Map();
 
-	settings = ExtensionUtils.getSettings();
+	settings = ExtensionUtils.getSettings(SETTINGS_SCHEMA);
+
+	handleChangedDebugLogging();
+
+	debug('enable()');
 
 	restoreSettings();
+
+	connectSettingChangedSignals();
 
 	connectTimeoutSignals();
 }
@@ -43,31 +72,49 @@ function enable() {
 function disable() {
 	debug('disable()');
 
+	disconnectSettingChangedSignals();
+
 	removeTimeouts();
 
 	saveSettings();
 
-	settings = null;
+	debugLogging = null;
+	startupDelayMs = null;
+	syncFrequencyMs = null;
+	saveFrequencyMs = null;
+	matchThreshold = null;
 
 	savedWindows = null;
 	seenWindows = null;
+
+	settings = null;
 }
 
 //// SETTINGS
 
 function restoreSettings() {
 	debug('restoreSettings()');
-	savedWindows = JSON.parse(settings.get_string(SESSION_SETTINGS_KEY));
+	savedWindows = JSON.parse(settings.get_string(SETTINGS_KEY_SAVED_WINDOWS));
+	handleChangedDebugLogging();
+	handleChangedStartupDelay();
+	handleChangedSyncFrequency();
+	handleChangedSaveFrequency();
+	handleChangedMatchThreshold();
 	dumpSavedWindows();
 }
 
 function saveSettings() {
-	let current = settings.get_string(SESSION_SETTINGS_KEY);
+	settings.set_boolean(SETTINGS_KEY_DEBUG_LOGGING, debugLogging);
+	settings.set_int(SETTINGS_KEY_STARTUP_DELAY, startupDelayMs);
+	settings.set_int(SETTINGS_KEY_SYNC_FREQUENCY, syncFrequencyMs);
+	settings.set_int(SETTINGS_KEY_SAVE_FREQUENCY, saveFrequencyMs);
+	settings.set_double(SETTINGS_KEY_MATCH_THRESHOLD, matchThreshold);
+	let current = settings.get_string(SETTINGS_KEY_SAVED_WINDOWS);
 	let session = JSON.stringify(savedWindows);
 	if (current === session) return;
 	debug('saveSettings()');
 	dumpSavedWindows();
-	settings.set_string(SESSION_SETTINGS_KEY, session);
+	settings.set_string(SETTINGS_KEY_SAVED_WINDOWS, session);
 }
 
 //// WINDOW UTILITIES
@@ -153,7 +200,7 @@ function updateSavedWindow(win) {
 function saveWindow(win) {
 	let wh = windowHash(win);
 
-	if (windowNewerThan(win, WINDOW_SAVE_DELAY_MS)) return;
+	if (windowNewerThan(win, startupDelayMs)) return;
 
 	//debug('saveWindow(): ' + win.get_id());
 	if (!updateSavedWindow(win)) {
@@ -186,12 +233,16 @@ function findSavedWindow(wsh, query, threshold) {
 	//debug('findSavedWindow() - search: ' + wsh + ', ' + JSON.stringify(query) + ' threshold: ' + threshold);
 
 	if (!savedWindows.hasOwnProperty(wsh)) {
-		//debug('findSavedWindow() - no such window: ' + wsh)
+		//debug('findSavedWindow() - no such window section: ' + wsh)
 		return undefined;
 	}
 
 	let scores = new Map();
 	savedWindows[wsh].forEach(function (sw, swi) {
+		if (query.occupied !== undefined && sw.occupied != query.occupied) {
+			scores.set(swi, 0);
+			return;
+		}
 		let match_parts = 0;
 		let query_parts = 0;
 		Object.keys(query).forEach(function (key) {
@@ -219,7 +270,7 @@ function findSavedWindow(wsh, query, threshold) {
 	if (best_score >= threshold)
 		found = best_swi;
 
-	//debug('findSavedWindow() - found: ' + found + ' ' + JSON.stringify(savedWindows[wsh][found]));
+	//debug('findSavedWindow() - found: ' + found + ' ' + ' ' + best_score + JSON.stringify(savedWindows[wsh][found]));
 
 	return found;
 }
@@ -249,7 +300,7 @@ function restoreWindow(win) {
 
 	if (swi !== undefined) return false;
 
-	swi = findSavedWindow(wsh, { title: win.get_title(), occupied: false }, WINDOW_RESTORE_MATCH_THRESHOLD);
+	swi = findSavedWindow(wsh, { title: win.get_title(), occupied: false }, matchThreshold);
 
 	if (swi === undefined) return false;
 
@@ -307,20 +358,53 @@ function syncWindows() {
 function handleTimeoutSave() {
 	//debug('handleTimeoutSave(): ' + JSON.stringify(savedWindows));
 	saveSettings();
-	timeoutSaveSignal = Mainloop.timeout_add(SESSION_SAVE_TIMEOUT_MS, handleTimeoutSave);
+	timeoutSaveSignal = Mainloop.timeout_add(saveFrequencyMs, handleTimeoutSave);
 }
 
 function handleTimeoutSync() {
 	//debug('handleTimeoutSync()');
 	syncWindows();
-	timeoutSyncSignal = Mainloop.timeout_add(WINDOW_SYNC_TIMEOUT_MS, handleTimeoutSync);
+	timeoutSyncSignal = Mainloop.timeout_add(syncFrequencyMs, handleTimeoutSync);
+}
+
+function handleChangedDebugLogging() {
+	debugLogging = settings.get_boolean(SETTINGS_KEY_DEBUG_LOGGING);
+	log('[smart-auto-move] handleChangedDebugLogging(): ' + debugLogging);
+}
+
+function handleChangedStartupDelay() {
+	startupDelayMs = settings.get_int(SETTINGS_KEY_STARTUP_DELAY);
+	debug('handleChangedStartupDelay(): ' + startupDelayMs);
+}
+
+function handleChangedSyncFrequency() {
+	syncFrequencyMs = settings.get_int(SETTINGS_KEY_SYNC_FREQUENCY);
+	debug('handleChangedSyncFrequency(): ' + syncFrequencyMs);
+}
+
+function handleChangedSaveFrequency() {
+	saveFrequencyMs = settings.get_int(SETTINGS_KEY_SAVE_FREQUENCY);
+	debug('handleChangedSaveFrequency(): ' + saveFrequencyMs);
+}
+
+function handleChangedMatchThreshold() {
+	matchThreshold = settings.get_double(SETTINGS_KEY_MATCH_THRESHOLD);
+	debug('handleChangedMatchThreshold(): ' + matchThreshold);
 }
 
 //// SIGNAL HELPERS
 
 function connectTimeoutSignals() {
-	timeoutSyncSignal = Mainloop.timeout_add(WINDOW_SYNC_TIMEOUT_MS, handleTimeoutSync);
-	timeoutSaveSignal = Mainloop.timeout_add(SESSION_SAVE_TIMEOUT_MS, handleTimeoutSave);
+	timeoutSyncSignal = Mainloop.timeout_add(syncFrequencyMs, handleTimeoutSync);
+	timeoutSaveSignal = Mainloop.timeout_add(saveFrequencyMs, handleTimeoutSave);
+}
+
+function connectSettingChangedSignals() {
+	changedDebugLoggingSignal = settings.connect('changed::' + SETTINGS_KEY_DEBUG_LOGGING, handleChangedDebugLogging);
+	changedStartupDelaySignal = settings.connect('changed::' + SETTINGS_KEY_STARTUP_DELAY, handleChangedStartupDelay);
+	changedSyncFrequencySignal = settings.connect('changed::' + SETTINGS_KEY_SYNC_FREQUENCY, handleChangedSyncFrequency);
+	changedSaveFrequencySignal = settings.connect('changed::' + SETTINGS_KEY_SAVE_FREQUENCY, handleChangedSaveFrequency);
+	changedMatchThresholdSignal = settings.connect('changed::' + SETTINGS_KEY_MATCH_THRESHOLD, handleChangedMatchThreshold);
 }
 
 function removeTimeouts() {
@@ -331,10 +415,24 @@ function removeTimeouts() {
 	timeoutSaveSignal = null;
 }
 
+function disconnectSettingChangedSignals() {
+	settings.disconnect(changedDebugLoggingSignal);
+	settings.disconnect(changedStartupDelaySignal);
+	settings.disconnect(changedSyncFrequencySignal);
+	settings.disconnect(changedSaveFrequencySignal);
+	settings.disconnect(changedMatchThresholdSignal);
+
+	changedDebugLoggingSignal = null;
+	changedStartupDelaySignal = null;
+	changedSyncFrequencySignal = null;
+	changedSaveFrequencySignal = null;
+	changedMatchThresholdSignal = null;
+}
+
 //// DEBUG UTILITIES
 
 function debug(message) {
-	if (DEBUG_LOGGING) {
+	if (debugLogging) {
 		log('[smart-auto-move] ' + message);
 	}
 }

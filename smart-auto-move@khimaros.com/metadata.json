@@ -1,13 +1,13 @@
 {
-    "uuid": "smart-auto-move@khimaros.com",
-    "name": "Smart Auto Move",
-    "url": "https://github.com/khimaros/smart-auto-move",
-    "description": "Smart Auto Move learns the locations of your application windows and moves them to the correct place on launch.",
-		"settings-schema": "org.gnome.shell.extensions.smart-auto-move",
-    "settings-path": "/org/gnome/shell/extensions/smart-auto-move/",
-    "original-author": "khimaros",
-    "version": "0.3.0",
-    "shell-version": [
-        "41"
-    ]
+  "uuid": "smart-auto-move@khimaros.com",
+  "name": "Smart Auto Move",
+  "url": "https://github.com/khimaros/smart-auto-move",
+  "description": "Smart Auto Move learns the size and position of your application windows and restores them to the correct place on subsequent launches. Supports Wayland.",
+  "settings-schema": "org.gnome.shell.extensions.smart-auto-move",
+  "settings-path": "/org/gnome/shell/extensions/smart-auto-move/",
+  "original-author": "khimaros",
+  "version": "5",
+  "shell-version": [
+    "41"
+  ]
 }
