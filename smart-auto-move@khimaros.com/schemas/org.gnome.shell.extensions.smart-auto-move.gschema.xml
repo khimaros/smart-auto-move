@@ -1,4 +1,8 @@
 <schemalist gettext-domain="gnome-shell-extensions">
+  <enum id="org.gnome.shell.extensions.smart-auto-move.sync-mode-enum">
+    <value value="0" nick="IGNORE" />
+    <value value="1" nick="RESTORE" />
+  </enum>
   <schema id="org.gnome.shell.extensions.smart-auto-move" path="/org/gnome/shell/extensions/smart-auto-move/">
     <key name="saved-windows" type="s">
       <default>'{}'</default>
@@ -29,6 +33,16 @@
       <default>0.7</default>
       <summary>Match Threshold</summary>
       <description>Minimum threshold for matching restored windows.</description>
+    </key>
+    <key name="sync-mode" enum="org.gnome.shell.extensions.smart-auto-move.sync-mode-enum">
+      <default>'RESTORE'</default>
+      <summary>Sync Mode</summary>
+      <description>Default mode when synchronizing windows.</description>
+    </key>
+    <key name="overrides" type="s">
+      <default>'{}'</default>
+      <summary>Overrides</summary>
+      <description>Overrides for restored window data.</description>
     </key>
   </schema>
 </schemalist>

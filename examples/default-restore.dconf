@@ -1,0 +1,9 @@
+[/]
+debug-logging=true
+match-threshold=0.69999999999999996
+overrides='{"firefox":[{"query":{"title":"Firefox - Choose User Profile"},"action":0}]}'
+save-frequency=1000
+saved-windows='{}'
+startup-delay=2500
+sync-frequency=100
+sync-mode='RESTORE'

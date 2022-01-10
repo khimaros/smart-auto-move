@@ -1,0 +1,9 @@
+[/]
+debug-logging=true
+match-threshold=0.69999999999999996
+overrides='{"gnome-calculator":[{"action":1}],"firefox":[{"query":{"title":"Firefox - Choose User Profile"},"action":0},{"action":1}],"org.gnome.Nautilus":[{"query":{"title":"Downloads"},"action":1}]}'
+save-frequency=1000
+saved-windows='{}'
+startup-delay=2500
+sync-frequency=100
+sync-mode='IGNORE'

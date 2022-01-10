@@ -6,7 +6,7 @@
   "settings-schema": "org.gnome.shell.extensions.smart-auto-move",
   "settings-path": "/org/gnome/shell/extensions/smart-auto-move/",
   "original-author": "khimaros",
-  "version": "5",
+  "version": "6",
   "shell-version": [
     "41"
   ]

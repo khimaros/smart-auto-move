@@ -15,6 +15,11 @@ const SETTINGS_KEY_STARTUP_DELAY = 'startup-delay';
 const SETTINGS_KEY_SYNC_FREQUENCY = 'sync-frequency';
 const SETTINGS_KEY_SAVE_FREQUENCY = 'save-frequency';
 const SETTINGS_KEY_MATCH_THRESHOLD = 'match-threshold';
+const SETTINGS_KEY_SYNC_MODE = 'sync-mode';
+const SETTINGS_KEY_OVERRIDES = 'overrides';
+
+const SYNC_MODE_IGNORE = 0;
+const SYNC_MODE_RESTORE = 1;
 
 // default setting values (see also gschema xml)
 const DEFAULT_DEBUG_LOGGING = false;
@@ -22,6 +27,7 @@ const DEFAULT_STARTUP_DELAY_MS = 2500;
 const DEFAULT_SYNC_FREQUENCY_MS = 100;
 const DEFAULT_SAVE_FREQUENCY_MS = 1000;
 const DEFAULT_MATCH_THRESHOLD = 0.7;
+const DEFAULT_SYNC_MODE = SYNC_MODE_RESTORE;
 
 // settings backed state
 let debugLogging;
@@ -30,6 +36,8 @@ let syncFrequencyMs;
 let saveFrequencyMs;
 let matchThreshold;
 let savedWindows;
+let syncMode;
+let overrides;
 
 // mutable runtime state
 let activeWindows;
@@ -43,6 +51,8 @@ let changedStartupDelaySignal;
 let changedSyncFrequencySignal;
 let changedSaveFrequencySignal;
 let changedMatchThresholdSignal;
+let changedSyncModeSignal;
+let changedOverridesSignal;
 
 //// EXTENSION LIFECYCLE
 
@@ -84,6 +94,9 @@ function initializeSettings() {
 	saveFrequencyMs = DEFAULT_SAVE_FREQUENCY_MS;
 	matchThreshold = DEFAULT_MATCH_THRESHOLD;
 	savedWindows = new Object();
+	syncMode = DEFAULT_SYNC_MODE;
+	overrides = new Object();
+
 	handleChangedDebugLogging();
 }
 
@@ -95,9 +108,9 @@ function cleanupSettings() {
 	saveFrequencyMs = null;
 	matchThreshold = null;
 	savedWindows = null;
+	syncMode = null;
+	overrides = null;
 }
-
-//// SETTINGS
 
 function restoreSettings() {
 	debug('restoreSettings()');
@@ -107,6 +120,8 @@ function restoreSettings() {
 	handleChangedSyncFrequency();
 	handleChangedSaveFrequency();
 	handleChangedMatchThreshold();
+	handleChangedSyncMode();
+	handleChangedOverrides();
 	dumpSavedWindows();
 }
 
@@ -116,12 +131,15 @@ function saveSettings() {
 	settings.set_int(SETTINGS_KEY_SYNC_FREQUENCY, syncFrequencyMs);
 	settings.set_int(SETTINGS_KEY_SAVE_FREQUENCY, saveFrequencyMs);
 	settings.set_double(SETTINGS_KEY_MATCH_THRESHOLD, matchThreshold);
-	let current = settings.get_string(SETTINGS_KEY_SAVED_WINDOWS);
-	let session = JSON.stringify(savedWindows);
-	if (current === session) return;
+	settings.set_enum(SETTINGS_KEY_SYNC_MODE, syncMode);
+	let newOverrides = JSON.stringify(overrides);
+	settings.set_string(SETTINGS_KEY_OVERRIDES, newOverrides);
+	let oldSavedWindows = settings.get_string(SETTINGS_KEY_SAVED_WINDOWS);
+	let newSavedWindows = JSON.stringify(savedWindows);
+	if (oldSavedWindows === newSavedWindows) return;
 	debug('saveSettings()');
 	dumpSavedWindows();
-	settings.set_string(SETTINGS_KEY_SAVED_WINDOWS, session);
+	settings.set_string(SETTINGS_KEY_SAVED_WINDOWS, newSavedWindows);
 }
 
 //// WINDOW UTILITIES
@@ -237,9 +255,56 @@ function levensteinDistance(a, b) {
 	return m[b.length][a.length];
 }
 
-function findSavedWindow(wsh, query, threshold) {
-	//debug('findSavedWindow() - search: ' + wsh + ', ' + JSON.stringify(query) + ' threshold: ' + threshold);
+function scoreWindow(sw, query) {
+	//debug('scoreWindow() - search: ' + JSON.stringify(sw) + ' ?= ' + JSON.stringify(query));
+	if (query.occupied !== undefined && sw.occupied != query.occupied) return 0;
+	let match_parts = 0;
+	let query_parts = 0;
+	Object.keys(query).forEach(function (key) {
+		let value = query[key];
+		if (key === 'title') {
+			let dist = levensteinDistance(value, sw[key]);
+			match_parts += (value.length - dist) / value.length;
+		} else if (sw[key] === value) {
+			match_parts += 1;
+		}
+		query_parts += 1;
+	});
+	let score = match_parts / query_parts;
+	return score;
+}
 
+function findOverrideAction(win, threshold) {
+	let wsh = windowSectionHash(win);
+	let sw = windowData(win);
+
+	let action = syncMode;
+	let matched = false;
+
+	if (!overrides.hasOwnProperty(wsh)) {
+		//debug('findOverrideAction(): no overrides for section ' + wsh);
+		return action;
+	}
+	overrides[wsh].forEach(function (o, oi) {
+		if (matched) return;
+		if (!o.hasOwnProperty('query')) {
+			action = o.action;
+			matched = true;
+			return;
+		}
+		let score = scoreWindow(sw, o.query);
+		if (score >= threshold) {
+			action = o.action;
+			matched = true;
+			return;
+		}
+	});
+
+	//debug('findOverrideAction(): ' + wsh + ' ' + JSON.stringify(sw) + ' ' + action);
+	return action;
+}
+
+function findSavedWindow(wsh, query, threshold) {
 	if (!savedWindows.hasOwnProperty(wsh)) {
 		//debug('findSavedWindow() - no such window section: ' + wsh)
 		return undefined;
@@ -247,23 +312,7 @@ function findSavedWindow(wsh, query, threshold) {
 
 	let scores = new Map();
 	savedWindows[wsh].forEach(function (sw, swi) {
-		if (query.occupied !== undefined && sw.occupied != query.occupied) {
-			scores.set(swi, 0);
-			return;
-		}
-		let match_parts = 0;
-		let query_parts = 0;
-		Object.keys(query).forEach(function (key) {
-			let value = query[key];
-			if (key === 'title') {
-				let dist = levensteinDistance(value, sw[key]);
-				match_parts += (value.length - dist) / value.length;
-			} else if (sw[key] === value) {
-				match_parts += 1;
-			}
-			query_parts += 1;
-		});
-		let score = match_parts / query_parts;
+		let score = scoreWindow(sw, query);
 		scores.set(swi, score);
 	});
 
@@ -356,6 +405,10 @@ function syncWindows() {
 	cleanupWindows();
 	global.get_window_actors().forEach(function (actor) {
 		let win = actor.get_meta_window();
+
+		let action = findOverrideAction(win, 1.0);
+		if (action !== SYNC_MODE_RESTORE) return false;
+
 		if (!restoreWindow(win))
 			ensureSavedWindow(win);
 	});
@@ -400,6 +453,16 @@ function handleChangedMatchThreshold() {
 	debug('handleChangedMatchThreshold(): ' + matchThreshold);
 }
 
+function handleChangedSyncMode() {
+	syncMode = settings.get_enum(SETTINGS_KEY_SYNC_MODE);
+	debug('handleChangedSyncMode(): ' + syncMode);
+}
+
+function handleChangedOverrides() {
+	overrides = JSON.parse(settings.get_string(SETTINGS_KEY_OVERRIDES));
+	debug('handleChangedOverrides(): ' + JSON.stringify(overrides));
+}
+
 //// SIGNAL HELPERS
 
 function connectSignals() {
@@ -432,6 +495,8 @@ function connectSettingChangedSignals() {
 	changedSyncFrequencySignal = settings.connect('changed::' + SETTINGS_KEY_SYNC_FREQUENCY, handleChangedSyncFrequency);
 	changedSaveFrequencySignal = settings.connect('changed::' + SETTINGS_KEY_SAVE_FREQUENCY, handleChangedSaveFrequency);
 	changedMatchThresholdSignal = settings.connect('changed::' + SETTINGS_KEY_MATCH_THRESHOLD, handleChangedMatchThreshold);
+	changedSyncModeSignal = settings.connect('changed::' + SETTINGS_KEY_SYNC_MODE, handleChangedSyncMode);
+	changedOverridesSignal = settings.connect('changed::' + SETTINGS_KEY_OVERRIDES, handleChangedOverrides);
 }
 
 function disconnectSettingChangedSignals() {
@@ -440,12 +505,16 @@ function disconnectSettingChangedSignals() {
 	settings.disconnect(changedSyncFrequencySignal);
 	settings.disconnect(changedSaveFrequencySignal);
 	settings.disconnect(changedMatchThresholdSignal);
+	settings.disconnect(changedSyncModeSignal);
+	settings.disconnect(changedOverridesSignal);
 
 	changedDebugLoggingSignal = null;
 	changedStartupDelaySignal = null;
 	changedSyncFrequencySignal = null;
 	changedSaveFrequencySignal = null;
 	changedMatchThresholdSignal = null;
+	changedSyncModeSignal = null;
+	changedOverridesSignal = null;
 }
 
 //// DEBUG UTILITIES
