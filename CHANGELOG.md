@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## version 7
+
+- initial GUI for editing preferences
+
 ## version 6
 
 - allow/block list for windows (dconf only)

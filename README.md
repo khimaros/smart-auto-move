@@ -1,8 +1,18 @@
 # smart-auto-move
 
-## overview
+smart-auto-move is a Gnome Shell extension which keeps track of all application windows and restores them to the previous position, size, and workspace on restart. Supports Wayland.
 
-smart-auto-move is a Gnome Shell extension which keeps track of all application windows and restores them to the previous position, size, and workspace on restart.
+<p align="left">
+  <a href="https://extensions.gnome.org/extension/4736/smart-auto-move/">
+    <img alt="Get it on GNOME Extensions" width="228" src="https://raw.githubusercontent.com/andyholmes/gnome-shell-extensions-badge/master/get-it-on-ego.svg?sanitize=true"/>
+  </a>
+</p>
+
+## screenshots
+
+![screenshot: saved windows preferences](docs/screenshot-saved-windows.png)
+
+![screenshot: overrides preferences](docs/screenshot-overrides.png)
 
 ## limitations
 
@@ -14,13 +24,9 @@ because there is no way to uniquely distinguish individual windows from an appli
 
 titles are matched using Levenstein distance. the match bonus for title is calculated based on `(title length - distance) / title length`.
 
-## installation
-
-install the extension from https://extensions.gnome.org/extension/4736/smart-auto-move/
-
 ## settings
 
-settings are not exposed in a preferences GUI.
+most settings can be modified from the preferences GUI. this section documents all of the dconf values and is only recommended for advanced users.
 
 enable debug logging:
 

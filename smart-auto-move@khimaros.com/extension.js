@@ -6,28 +6,7 @@ const Mainloop = imports.mainloop;
 const St = imports.gi.St;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-
-// setting constants
-const SETTINGS_SCHEMA = 'org.gnome.shell.extensions.smart-auto-move';
-const SETTINGS_KEY_SAVED_WINDOWS = 'saved-windows';
-const SETTINGS_KEY_DEBUG_LOGGING = 'debug-logging';
-const SETTINGS_KEY_STARTUP_DELAY = 'startup-delay';
-const SETTINGS_KEY_SYNC_FREQUENCY = 'sync-frequency';
-const SETTINGS_KEY_SAVE_FREQUENCY = 'save-frequency';
-const SETTINGS_KEY_MATCH_THRESHOLD = 'match-threshold';
-const SETTINGS_KEY_SYNC_MODE = 'sync-mode';
-const SETTINGS_KEY_OVERRIDES = 'overrides';
-
-const SYNC_MODE_IGNORE = 0;
-const SYNC_MODE_RESTORE = 1;
-
-// default setting values (see also gschema xml)
-const DEFAULT_DEBUG_LOGGING = false;
-const DEFAULT_STARTUP_DELAY_MS = 2500;
-const DEFAULT_SYNC_FREQUENCY_MS = 100;
-const DEFAULT_SAVE_FREQUENCY_MS = 1000;
-const DEFAULT_MATCH_THRESHOLD = 0.7;
-const DEFAULT_SYNC_MODE = SYNC_MODE_RESTORE;
+const Common = Me.imports.lib.common;
 
 // settings backed state
 let debugLogging;
@@ -35,9 +14,9 @@ let startupDelayMs;
 let syncFrequencyMs;
 let saveFrequencyMs;
 let matchThreshold;
-let savedWindows;
 let syncMode;
 let overrides;
+let savedWindows;
 
 // mutable runtime state
 let activeWindows;
@@ -53,6 +32,7 @@ let changedSaveFrequencySignal;
 let changedMatchThresholdSignal;
 let changedSyncModeSignal;
 let changedOverridesSignal;
+let changedSavedWindowsSignal;
 
 //// EXTENSION LIFECYCLE
 
@@ -87,15 +67,15 @@ function disable() {
 //// SETTINGS
 
 function initializeSettings() {
-	settings = ExtensionUtils.getSettings(SETTINGS_SCHEMA);
-	debugLogging = DEFAULT_DEBUG_LOGGING;
-	startupDelayMs = DEFAULT_STARTUP_DELAY_MS;
-	syncFrequencyMs = DEFAULT_SYNC_FREQUENCY_MS;
-	saveFrequencyMs = DEFAULT_SAVE_FREQUENCY_MS;
-	matchThreshold = DEFAULT_MATCH_THRESHOLD;
-	savedWindows = new Object();
-	syncMode = DEFAULT_SYNC_MODE;
+	settings = ExtensionUtils.getSettings(Common.SETTINGS_SCHEMA);
+	debugLogging = Common.DEFAULT_DEBUG_LOGGING;
+	startupDelayMs = Common.DEFAULT_STARTUP_DELAY_MS;
+	syncFrequencyMs = Common.DEFAULT_SYNC_FREQUENCY_MS;
+	saveFrequencyMs = Common.DEFAULT_SAVE_FREQUENCY_MS;
+	matchThreshold = Common.DEFAULT_MATCH_THRESHOLD;
+	syncMode = Common.DEFAULT_SYNC_MODE;
 	overrides = new Object();
+	savedWindows = new Object();
 
 	handleChangedDebugLogging();
 }
@@ -107,14 +87,13 @@ function cleanupSettings() {
 	syncFrequencyMs = null;
 	saveFrequencyMs = null;
 	matchThreshold = null;
-	savedWindows = null;
 	syncMode = null;
 	overrides = null;
+	savedWindows = null;
 }
 
 function restoreSettings() {
 	debug('restoreSettings()');
-	savedWindows = JSON.parse(settings.get_string(SETTINGS_KEY_SAVED_WINDOWS));
 	handleChangedDebugLogging();
 	handleChangedStartupDelay();
 	handleChangedSyncFrequency();
@@ -122,24 +101,27 @@ function restoreSettings() {
 	handleChangedMatchThreshold();
 	handleChangedSyncMode();
 	handleChangedOverrides();
+	handleChangedSavedWindows();
 	dumpSavedWindows();
 }
 
 function saveSettings() {
-	settings.set_boolean(SETTINGS_KEY_DEBUG_LOGGING, debugLogging);
-	settings.set_int(SETTINGS_KEY_STARTUP_DELAY, startupDelayMs);
-	settings.set_int(SETTINGS_KEY_SYNC_FREQUENCY, syncFrequencyMs);
-	settings.set_int(SETTINGS_KEY_SAVE_FREQUENCY, saveFrequencyMs);
-	settings.set_double(SETTINGS_KEY_MATCH_THRESHOLD, matchThreshold);
-	settings.set_enum(SETTINGS_KEY_SYNC_MODE, syncMode);
+	settings.set_boolean(Common.SETTINGS_KEY_DEBUG_LOGGING, debugLogging);
+	settings.set_int(Common.SETTINGS_KEY_STARTUP_DELAY, startupDelayMs);
+	settings.set_int(Common.SETTINGS_KEY_SYNC_FREQUENCY, syncFrequencyMs);
+	settings.set_int(Common.SETTINGS_KEY_SAVE_FREQUENCY, saveFrequencyMs);
+	settings.set_double(Common.SETTINGS_KEY_MATCH_THRESHOLD, matchThreshold);
+	settings.set_enum(Common.SETTINGS_KEY_SYNC_MODE, syncMode);
+
 	let newOverrides = JSON.stringify(overrides);
-	settings.set_string(SETTINGS_KEY_OVERRIDES, newOverrides);
-	let oldSavedWindows = settings.get_string(SETTINGS_KEY_SAVED_WINDOWS);
+	settings.set_string(Common.SETTINGS_KEY_OVERRIDES, newOverrides);
+
+	let oldSavedWindows = settings.get_string(Common.SETTINGS_KEY_SAVED_WINDOWS);
 	let newSavedWindows = JSON.stringify(savedWindows);
 	if (oldSavedWindows === newSavedWindows) return;
 	debug('saveSettings()');
 	dumpSavedWindows();
-	settings.set_string(SETTINGS_KEY_SAVED_WINDOWS, newSavedWindows);
+	settings.set_string(Common.SETTINGS_KEY_SAVED_WINDOWS, newSavedWindows);
 }
 
 //// WINDOW UTILITIES
@@ -407,7 +389,7 @@ function syncWindows() {
 		let win = actor.get_meta_window();
 
 		let action = findOverrideAction(win, 1.0);
-		if (action !== SYNC_MODE_RESTORE) return false;
+		if (action !== Common.SYNC_MODE_RESTORE) return false;
 
 		if (!restoreWindow(win))
 			ensureSavedWindow(win);
@@ -429,38 +411,43 @@ function handleTimeoutSync() {
 }
 
 function handleChangedDebugLogging() {
-	debugLogging = settings.get_boolean(SETTINGS_KEY_DEBUG_LOGGING);
+	debugLogging = settings.get_boolean(Common.SETTINGS_KEY_DEBUG_LOGGING);
 	log('[smart-auto-move] handleChangedDebugLogging(): ' + debugLogging);
 }
 
 function handleChangedStartupDelay() {
-	startupDelayMs = settings.get_int(SETTINGS_KEY_STARTUP_DELAY);
+	startupDelayMs = settings.get_int(Common.SETTINGS_KEY_STARTUP_DELAY);
 	debug('handleChangedStartupDelay(): ' + startupDelayMs);
 }
 
 function handleChangedSyncFrequency() {
-	syncFrequencyMs = settings.get_int(SETTINGS_KEY_SYNC_FREQUENCY);
+	syncFrequencyMs = settings.get_int(Common.SETTINGS_KEY_SYNC_FREQUENCY);
 	debug('handleChangedSyncFrequency(): ' + syncFrequencyMs);
 }
 
 function handleChangedSaveFrequency() {
-	saveFrequencyMs = settings.get_int(SETTINGS_KEY_SAVE_FREQUENCY);
+	saveFrequencyMs = settings.get_int(Common.SETTINGS_KEY_SAVE_FREQUENCY);
 	debug('handleChangedSaveFrequency(): ' + saveFrequencyMs);
 }
 
 function handleChangedMatchThreshold() {
-	matchThreshold = settings.get_double(SETTINGS_KEY_MATCH_THRESHOLD);
+	matchThreshold = settings.get_double(Common.SETTINGS_KEY_MATCH_THRESHOLD);
 	debug('handleChangedMatchThreshold(): ' + matchThreshold);
 }
 
 function handleChangedSyncMode() {
-	syncMode = settings.get_enum(SETTINGS_KEY_SYNC_MODE);
+	syncMode = settings.get_enum(Common.SETTINGS_KEY_SYNC_MODE);
 	debug('handleChangedSyncMode(): ' + syncMode);
 }
 
 function handleChangedOverrides() {
-	overrides = JSON.parse(settings.get_string(SETTINGS_KEY_OVERRIDES));
+	overrides = JSON.parse(settings.get_string(Common.SETTINGS_KEY_OVERRIDES));
 	debug('handleChangedOverrides(): ' + JSON.stringify(overrides));
+}
+
+function handleChangedSavedWindows() {
+	savedWindows = JSON.parse(settings.get_string(Common.SETTINGS_KEY_SAVED_WINDOWS));
+	debug('handleChangedSavedWindows(): ' + JSON.stringify(savedWindows));
 }
 
 //// SIGNAL HELPERS
@@ -490,13 +477,14 @@ function removeTimeouts() {
 }
 
 function connectSettingChangedSignals() {
-	changedDebugLoggingSignal = settings.connect('changed::' + SETTINGS_KEY_DEBUG_LOGGING, handleChangedDebugLogging);
-	changedStartupDelaySignal = settings.connect('changed::' + SETTINGS_KEY_STARTUP_DELAY, handleChangedStartupDelay);
-	changedSyncFrequencySignal = settings.connect('changed::' + SETTINGS_KEY_SYNC_FREQUENCY, handleChangedSyncFrequency);
-	changedSaveFrequencySignal = settings.connect('changed::' + SETTINGS_KEY_SAVE_FREQUENCY, handleChangedSaveFrequency);
-	changedMatchThresholdSignal = settings.connect('changed::' + SETTINGS_KEY_MATCH_THRESHOLD, handleChangedMatchThreshold);
-	changedSyncModeSignal = settings.connect('changed::' + SETTINGS_KEY_SYNC_MODE, handleChangedSyncMode);
-	changedOverridesSignal = settings.connect('changed::' + SETTINGS_KEY_OVERRIDES, handleChangedOverrides);
+	changedDebugLoggingSignal = settings.connect('changed::' + Common.SETTINGS_KEY_DEBUG_LOGGING, handleChangedDebugLogging);
+	changedStartupDelaySignal = settings.connect('changed::' + Common.SETTINGS_KEY_STARTUP_DELAY, handleChangedStartupDelay);
+	changedSyncFrequencySignal = settings.connect('changed::' + Common.SETTINGS_KEY_SYNC_FREQUENCY, handleChangedSyncFrequency);
+	changedSaveFrequencySignal = settings.connect('changed::' + Common.SETTINGS_KEY_SAVE_FREQUENCY, handleChangedSaveFrequency);
+	changedMatchThresholdSignal = settings.connect('changed::' + Common.SETTINGS_KEY_MATCH_THRESHOLD, handleChangedMatchThreshold);
+	changedSyncModeSignal = settings.connect('changed::' + Common.SETTINGS_KEY_SYNC_MODE, handleChangedSyncMode);
+	changedOverridesSignal = settings.connect('changed::' + Common.SETTINGS_KEY_OVERRIDES, handleChangedOverrides);
+	changedSavedWindowsSignal = settings.connect('changed::' + Common.SETTINGS_KEY_SAVED_WINDOWS, handleChangedSavedWindows);
 }
 
 function disconnectSettingChangedSignals() {
@@ -507,6 +495,7 @@ function disconnectSettingChangedSignals() {
 	settings.disconnect(changedMatchThresholdSignal);
 	settings.disconnect(changedSyncModeSignal);
 	settings.disconnect(changedOverridesSignal);
+	settings.disconnect(changedSavedWindowsSignal);
 
 	changedDebugLoggingSignal = null;
 	changedStartupDelaySignal = null;
@@ -515,6 +504,7 @@ function disconnectSettingChangedSignals() {
 	changedMatchThresholdSignal = null;
 	changedSyncModeSignal = null;
 	changedOverridesSignal = null;
+	changedSavedWindowsSignal = null;
 }
 
 //// DEBUG UTILITIES
