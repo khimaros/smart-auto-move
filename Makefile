@@ -5,7 +5,7 @@ clean:
 	rm ./smart-auto-move@khimaros.com.shell-extension.zip ./smart-auto-move@khimaros.com/ui/*-gtk4.ui ./smart-auto-move@khimaros.com/schemas/gschemas.compiled
 .PHONY: clean
 
-smart-auto-move@khimaros.com/ui/%-gtk4.ui: smart-auto-move@khimaros.com/ui/%-gtk3.ui
+smart-auto-move@khimaros.com/ui/%-gtk4.ui: smart-auto-move@khimaros.com/ui.in/%-gtk3.ui
 	gtk4-builder-tool simplify --3to4 $< > $@
 
 smart-auto-move@khimaros.com.shell-extension.zip: schemas ui ./smart-auto-move@khimaros.com/*
@@ -18,7 +18,6 @@ schemas: smart-auto-move@khimaros.com/schemas/gschemas.compiled
 .PHONY: schemas
 
 ui: smart-auto-move@khimaros.com/ui/prefs-gtk4.ui smart-auto-move@khimaros.com/ui/templates-gtk4.ui
-	rm ./smart-auto-move@khimaros.com/ui/*.ui~
 .PHONY: ui
 
 log:

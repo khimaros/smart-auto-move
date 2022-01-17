@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## version 8
+
+- code review cleanup
+
 ## version 7
 
 - initial GUI for editing preferences
