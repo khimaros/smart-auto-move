@@ -20,6 +20,10 @@ schemas: smart-auto-move@khimaros.com/schemas/gschemas.compiled
 ui: smart-auto-move@khimaros.com/ui/prefs-gtk4.ui smart-auto-move@khimaros.com/ui/templates-gtk4.ui
 .PHONY: ui
 
+test:
+	gjs -I smart-auto-move@khimaros.com/lib/ ./smart-auto-move@khimaros.com/test/common.test.js
+.PHONY: test
+
 log:
 	journalctl -f /usr/bin/gnome-shell
 .PHONY: log

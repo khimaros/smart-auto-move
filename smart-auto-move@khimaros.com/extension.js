@@ -195,7 +195,7 @@ function pushSavedWindow(win) {
 function updateSavedWindow(win) {
 	let wsh = windowSectionHash(win);
 	//debug('updateSavedWindow() - start: ' + wsh + ', ' + win.get_title());
-	let swi = findSavedWindow(wsh, { hash: windowHash(win) }, 1.0);
+	let [swi, _] = Common.findSavedWindow(savedWindows, wsh, { hash: windowHash(win) }, 1.0);
 	if (swi === undefined)
 		return false;
 	let sw = windowData(win);
@@ -216,102 +216,17 @@ function ensureSavedWindow(win) {
 	}
 }
 
-function levensteinDistance(a, b) {
-	var m = [], i, j, min = Math.min;
-
-	if (!(a && b)) return (b || a).length;
-
-	for (i = 0; i <= b.length; m[i] = [i++]);
-	for (j = 0; j <= a.length; m[0][j] = j++);
-
-	for (i = 1; i <= b.length; i++) {
-		for (j = 1; j <= a.length; j++) {
-			m[i][j] = b.charAt(i - 1) == a.charAt(j - 1)
-				? m[i - 1][j - 1]
-				: m[i][j] = min(
-					m[i - 1][j - 1] + 1,
-					min(m[i][j - 1] + 1, m[i - 1][j] + 1))
-		}
-	}
-
-	return m[b.length][a.length];
-}
-
-function scoreWindow(sw, query) {
-	//debug('scoreWindow() - search: ' + JSON.stringify(sw) + ' ?= ' + JSON.stringify(query));
-	if (query.occupied !== undefined && sw.occupied != query.occupied) return 0;
-	let match_parts = 0;
-	let query_parts = 0;
-	Object.keys(query).forEach(function (key) {
-		let value = query[key];
-		if (key === 'title') {
-			let dist = levensteinDistance(value, sw[key]);
-			match_parts += (value.length - dist) / value.length;
-		} else if (sw[key] === value) {
-			match_parts += 1;
-		}
-		query_parts += 1;
-	});
-	let score = match_parts / query_parts;
-	return score;
-}
-
 function findOverrideAction(win, threshold) {
 	let wsh = windowSectionHash(win);
 	let sw = windowData(win);
 
 	let action = syncMode;
-	let matched = false;
 
-	if (!overrides.hasOwnProperty(wsh)) {
-		//debug('findOverrideAction(): no overrides for section ' + wsh);
-		return action;
-	}
-	overrides[wsh].forEach(function (o, oi) {
-		if (matched) return;
-		if (!o.hasOwnProperty('query')) {
-			action = o.action;
-			matched = true;
-			return;
-		}
-		let score = scoreWindow(sw, o.query);
-		if (score >= threshold) {
-			action = o.action;
-			matched = true;
-			return;
-		}
-	});
+	let override = Common.findOverride(overrides, wsh, sw, threshold);
 
-	//debug('findOverrideAction(): ' + wsh + ' ' + JSON.stringify(sw) + ' ' + action);
+	if (override !== undefined && override.action !== undefined) action = override.action;
+
 	return action;
-}
-
-function findSavedWindow(wsh, query, threshold) {
-	if (!savedWindows.hasOwnProperty(wsh)) {
-		//debug('findSavedWindow() - no such window section: ' + wsh)
-		return undefined;
-	}
-
-	let scores = new Map();
-	savedWindows[wsh].forEach(function (sw, swi) {
-		let score = scoreWindow(sw, query);
-		scores.set(swi, score);
-	});
-
-	let sorted_scores = new Map([...scores.entries()].sort((a, b) => b[1] - a[1]));
-
-	//debug('findSavedWindow() - sorted_scores: ' + JSON.stringify(Array.from(sorted_scores.entries())));
-
-	let best_swi = sorted_scores.keys().next().value;
-	let best_score = sorted_scores.get(best_swi);
-
-	let found = undefined;
-	if (best_score >= threshold)
-		found = best_swi;
-
-	//debug('findSavedWindow() - found: ' + found + ' ' + ' ' + best_score + JSON.stringify(savedWindows[wsh][found]));
-
-	return found;
 }
 
 function moveWindow(win, sw) {
@@ -335,17 +250,17 @@ function moveWindow(win, sw) {
 function restoreWindow(win) {
 	let wsh = windowSectionHash(win);
 
-	let swi = findSavedWindow(wsh, { hash: windowHash(win), occupied: true }, 1.0);
+	let sw;
+
+	let [swi, _] = Common.findSavedWindow(savedWindows, wsh, { hash: windowHash(win), occupied: true }, 1.0);
 
 	if (swi !== undefined) return false;
 
-	swi = findSavedWindow(wsh, { title: win.get_title(), occupied: false }, matchThreshold);
+	if (!windowReady(win)) return true; // try again later
+
+	[swi, sw] = Common.matchedWindow(savedWindows, overrides, wsh, win.get_title(), matchThreshold);
 
 	if (swi === undefined) return false;
-
-	if (!windowReady(win)) return true;
-
-	let sw = savedWindows[wsh][swi];
 
 	if (windowDataEqual(sw, windowData(win))) return true;
 

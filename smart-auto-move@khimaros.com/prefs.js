@@ -114,8 +114,10 @@ function loadOverridesSetting(listWidget) {
             let row_templates = new TemplatesBox();
             let row = row_templates._override_template_listboxrow;
             row.unparent();
-            row_templates._override_label.set_label(JSON.stringify(o.query));
-            row_templates._override_action_combo.set_active(o.action);
+            let query = 'ANY';
+            if (o.query) query = JSON.stringify(o.query);
+            row_templates._override_label.set_label(query);
+            if (o.action !== undefined) row_templates._override_action_combo.set_active(o.action);
             row_templates._override_action_combo.connect('changed', function (combo) {
                 //log('COMBO CHANGED ACTIVE: ' + combo.get_active());
                 wshos[oi].action = combo.get_active();
