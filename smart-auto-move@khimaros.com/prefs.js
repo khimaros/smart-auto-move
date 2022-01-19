@@ -13,15 +13,17 @@ var TemplatesBox = GObject.registerClass({
     Template: 'file://' + Me.path + '/ui/templates-gtk4.ui',
     InternalChildren: [
         'section-header-label',
-        'section-separator',
         'override-template-listboxrow',
         'override-label',
+        'override-threshold-spin',
         'override-action-combo',
         'override-delete-button',
         'saved-window-template-listboxrow',
         'saved-window-label',
+        'saved-window-active-switch',
         'saved-window-delete-button',
         'saved-window-ignore-button',
+        'saved-window-ignore-any-button',
     ],
 }, class TemplatesBox extends Gtk.Box { });
 
@@ -41,136 +43,224 @@ function buildPrefsWidget() {
 
     let notebook = builder.get_object('prefs-notebook');
 
-    let debugLoggingWidget = builder.get_object('debug-logging-switch');
+    /// GENERAL
+
+    let debug_logging_widget = builder.get_object('debug-logging-switch');
     settings.bind(
         Common.SETTINGS_KEY_DEBUG_LOGGING,
-        debugLoggingWidget,
+        debug_logging_widget,
         'active',
         Gio.SettingsBindFlags.DEFAULT
     );
 
-    let syncModeWidget = builder.get_object('sync-mode-combo');
+    let sync_mode_widget = builder.get_object('sync-mode-combo');
     settings.bind(
         Common.SETTINGS_KEY_SYNC_MODE,
-        syncModeWidget,
+        sync_mode_widget,
         'active-id',
         Gio.SettingsBindFlags.DEFAULT
     );
 
-    let matchThresholdWidget = builder.get_object('match-threshold-spin');
+    let match_threshold_widget = builder.get_object('match-threshold-spin');
     settings.bind(
         Common.SETTINGS_KEY_MATCH_THRESHOLD,
-        matchThresholdWidget,
+        match_threshold_widget,
         'value',
         Gio.SettingsBindFlags.DEFAULT
     );
 
-    let syncFrequencyWidget = builder.get_object('sync-frequency-spin');
+    let sync_frequency_widget = builder.get_object('sync-frequency-spin');
     settings.bind(
         Common.SETTINGS_KEY_SYNC_FREQUENCY,
-        syncFrequencyWidget,
+        sync_frequency_widget,
         'value',
         Gio.SettingsBindFlags.DEFAULT
     );
 
-    let saveFrequencyWidget = builder.get_object('save-frequency-spin');
+    let save_frequency_widget = builder.get_object('save-frequency-spin');
     settings.bind(
         Common.SETTINGS_KEY_SAVE_FREQUENCY,
-        saveFrequencyWidget,
+        save_frequency_widget,
         'value',
         Gio.SettingsBindFlags.DEFAULT
     );
 
-    let overridesListWidget = builder.get_object('overrides-listbox');
-    loadOverridesSetting(overridesListWidget);
-    changedOverridesSignal = settings.connect('changed::' + Common.SETTINGS_KEY_OVERRIDES, function () { loadOverridesSetting(overridesListWidget); });
+    /// SAVED WINDOWS
 
-    let savedWindowsListWidget = builder.get_object('saved-windows-listbox');
-    loadSavedWindowsSetting(savedWindowsListWidget);
-    changedSavedWindowsSignal = settings.connect('changed::' + Common.SETTINGS_KEY_SAVED_WINDOWS, function () { loadSavedWindowsSetting(savedWindowsListWidget); });
+    let saved_windows_list_widget = builder.get_object('saved-windows-listbox');
+    let saved_windows_list_objects = [];
+    loadSavedWindowsSetting(saved_windows_list_widget, saved_windows_list_objects);
+    changedSavedWindowsSignal = settings.connect('changed::' + Common.SETTINGS_KEY_SAVED_WINDOWS, function () { loadSavedWindowsSetting(saved_windows_list_widget, saved_windows_list_objects); });
+
+    /// OVERRIDES
+
+    let overrides_list_objects = [];
+    let overrides_list_widget = builder.get_object('overrides-listbox');
+    let overrides_add_application_widget = builder.get_object('overrides-add-application-button');
+    overrides_add_application_widget.connect('clicked', function () {
+        // TODO
+    });
+    loadOverridesSetting(overrides_list_widget, overrides_list_objects);
+    changedOverridesSignal = settings.connect('changed::' + Common.SETTINGS_KEY_OVERRIDES, function () { loadOverridesSetting(overrides_list_widget, overrides_list_objects); });
 
     return notebook;
 }
 
-function loadOverridesSetting(listWidget) {
+function loadOverridesSetting(list_widget, list_objects) {
     let overrides = JSON.parse(settings.get_string(Common.SETTINGS_KEY_OVERRIDES));
-
-    let current_row = listWidget.get_first_child();
+    
+    // TODO: deduplicate this with similar logic in loadSavedWindowsSetting()
+    let current_row = list_widget.get_first_child();
     current_row = current_row.get_next_sibling(); // skip the first row
     while (current_row !== null) {
         let prev_row = current_row;
         current_row = current_row.get_next_sibling();
-        listWidget.remove(prev_row);
+
+        // disconnect signals for all children
+        // TODO: simplify this by using an array instead of an object.
+        let lo = list_objects.shift();
+        if (lo !== null) {
+            lo['threshold'][1].disconnect(lo['threshold'][0]);
+            lo['action'][1].disconnect(lo['action'][0]);
+            lo['delete'][1].disconnect(lo['delete'][0]);
+        }
+
+        list_widget.remove(prev_row);
     }
+    // TODO: assert that list_objects is empty.
 
     Object.keys(overrides).forEach(function (wsh) {
         let header_templates = new TemplatesBox();
         let header = header_templates._section_header_label
         header.unparent();
         header.set_label(wsh);
-        listWidget.append(header);
+        list_widget.append(header);
+        list_objects.push(null);
+
         let wshos = overrides[wsh];
         wshos.forEach(function (o, oi) {
             let row_templates = new TemplatesBox();
+
             let row = row_templates._override_template_listboxrow;
             row.unparent();
+
+            let label_widget = row_templates._override_label;
             let query = 'ANY';
             if (o.query) query = JSON.stringify(o.query);
-            row_templates._override_label.set_label(query);
-            if (o.action !== undefined) row_templates._override_action_combo.set_active(o.action);
-            row_templates._override_action_combo.connect('changed', function (combo) {
-                //log('COMBO CHANGED ACTIVE: ' + combo.get_active());
-                wshos[oi].action = combo.get_active();
+            label_widget.set_label(query);
+
+            let threshold_widget = row_templates._override_threshold_spin;
+            if (o.query !== undefined) threshold_widget.set_sensitive(false);
+            if (o.threshold !== undefined) threshold_widget.set_value(o.threshold);
+            let threshold_signal = threshold_widget.connect('value-changed', function (spin) {
+                let threshold = spin.get_value();
+                if (threshold <= 0.01) threshold = undefined;
+                //log('SPIN THRESHOLD CHANGED: ' + threshold);
+                wshos[oi].threshold = threshold;
                 settings.set_string(Common.SETTINGS_KEY_OVERRIDES, JSON.stringify(overrides));
             });
-            row_templates._override_delete_button.connect('clicked', function () {
+
+            let action_widget = row_templates._override_action_combo
+            if (o.action !== undefined) action_widget.set_active(o.action);
+            else action_widget.set_active(2);
+            let action_signal = action_widget.connect('changed', function (combo) {
+                let action = combo.get_active();
+                if (action === 2) action = undefined;
+                //log('COMBO CHANGED ACTIVE: ' + combo.get_active());
+                wshos[oi].action = action;
+                settings.set_string(Common.SETTINGS_KEY_OVERRIDES, JSON.stringify(overrides));
+            });
+
+            let delete_widget = row_templates._override_delete_button;
+            let delete_signal = delete_widget.connect('clicked', function () {
                 //log('DELETE OVERRIDE: ' + JSON.stringify(o));
                 wshos.splice(oi, 1);
-                if (wshos.length < 1) delete(overrides[wsh]);
+                if (wshos.length < 1) delete (overrides[wsh]);
                 settings.set_string(Common.SETTINGS_KEY_OVERRIDES, JSON.stringify(overrides));
             });
-            listWidget.append(row);
+
+            list_widget.append(row);
+
+            list_objects.push({
+                threshold: [threshold_signal, threshold_widget],
+                action: [action_signal, action_widget],
+                delete: [delete_signal, delete_widget],
+            });
         });
-        listWidget.append(header_templates._section_separator);
     });
 }
 
-function loadSavedWindowsSetting(listWidget) {
-    let savedWindows = JSON.parse(settings.get_string(Common.SETTINGS_KEY_SAVED_WINDOWS));
+function loadSavedWindowsSetting(list_widget, list_objects) {
+    let saved_windows = JSON.parse(settings.get_string(Common.SETTINGS_KEY_SAVED_WINDOWS));
 
-    let current_row = listWidget.get_first_child();
+    let current_row = list_widget.get_first_child();
     while (current_row !== null) {
         let prev_row = current_row;
         current_row = current_row.get_next_sibling();
-        listWidget.remove(prev_row);
+
+        // disconnect signals for all children
+        let lo = list_objects.shift();
+        if (lo !== null) {
+            lo['delete'][1].disconnect(lo['delete'][0]);
+            lo['ignore'][1].disconnect(lo['ignore'][0]);
+        }
+
+        list_widget.remove(prev_row);
     }
 
-    Object.keys(savedWindows).forEach(function (wsh) {
-        let sws = savedWindows[wsh];
+    Object.keys(saved_windows).forEach(function (wsh) {
+        let sws = saved_windows[wsh];
         sws.forEach(function (sw, swi) {
             let row_templates = new TemplatesBox();
+
             let row = row_templates._saved_window_template_listboxrow;
             row.unparent();
-            row_templates._saved_window_label.set_label(wsh + ' - ' + sw.title);
+
+            let label_widget = row_templates._saved_window_label;
+            label_widget.set_label(wsh + ' - ' + sw.title);
             let label_attrs = Pango.AttrList.new();
             if (!sw.occupied) label_attrs.insert(Pango.attr_strikethrough_new(true));
-            row_templates._saved_window_label.set_attributes(label_attrs);
-            row_templates._saved_window_delete_button.connect('clicked', function () {
+            label_widget.set_attributes(label_attrs);
+
+            row_templates._saved_window_active_switch.set_active(sw.occupied);
+
+            let delete_widget = row_templates._saved_window_delete_button;
+            let delete_signal = delete_widget.connect('clicked', function () {
                 //log('DELETE SAVED WINDOW: ' + JSON.stringify(sw));
                 sws.splice(swi, 1);
-                if (sws.length < 1) delete(savedWindows[wsh]);
-                settings.set_string(Common.SETTINGS_KEY_SAVED_WINDOWS, JSON.stringify(savedWindows));
+                if (sws.length < 1) delete (saved_windows[wsh]);
+                settings.set_string(Common.SETTINGS_KEY_SAVED_WINDOWS, JSON.stringify(saved_windows));
             });
-            row_templates._saved_window_ignore_button.connect('clicked', function () {
-                let o = {query: {title: sw.title}, action: 0};
+
+            let ignore_widget = row_templates._saved_window_ignore_button;
+            let ignore_signal = ignore_widget.connect('clicked', function () {
+                let o = { query: { title: sw.title }, action: 0 };
                 //log('ADD OVERRIDE: ' + wsh + ' ' + o);
                 let overrides = JSON.parse(settings.get_string(Common.SETTINGS_KEY_OVERRIDES));
-                if (! overrides.hasOwnProperty(wsh))
+                if (!overrides.hasOwnProperty(wsh))
+                    overrides[wsh] = new Array();
+                overrides[wsh].insert(o);
+                settings.set_string(Common.SETTINGS_KEY_OVERRIDES, JSON.stringify(overrides));
+            });
+
+            let ignore_any_widget = row_templates._saved_window_ignore_any_button;
+            let ignore_any_signal = ignore_any_widget.connect('clicked', function () {
+                let o = { action: 0 };
+                //log('ADD OVERRIDE: ' + wsh + ' ' + o);
+                let overrides = JSON.parse(settings.get_string(Common.SETTINGS_KEY_OVERRIDES));
+                if (!overrides.hasOwnProperty(wsh))
                     overrides[wsh] = new Array();
                 overrides[wsh].push(o);
                 settings.set_string(Common.SETTINGS_KEY_OVERRIDES, JSON.stringify(overrides));
-            })
-            listWidget.append(row);
+            });
+
+            list_widget.append(row);
+
+            list_objects.push({
+                delete: [delete_signal, delete_widget],
+                ignore: [ignore_signal, ignore_widget],
+                ignore_any: [ignore_any_signal, ignore_any_widget],
+            });
         });
     });
 }

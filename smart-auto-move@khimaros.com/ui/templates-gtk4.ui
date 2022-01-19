@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <requires lib="gtk" version="4.0"/>
+  <object class="GtkAdjustment" id="override-threshold-adjustment">
+    <property name="upper">1</property>
+    <property name="step-increment">0.05</property>
+    <property name="page-increment">0.10</property>
+  </object>
   <template class="templates" parent="GtkBox">
     <property name="orientation">vertical</property>
     <child>
@@ -24,10 +29,21 @@
               </object>
             </child>
             <child>
+              <object class="GtkSpinButton" id="override-threshold-spin">
+                <property name="focusable">1</property>
+                <property name="text" translatable="yes">0.00</property>
+                <property name="adjustment">override-threshold-adjustment</property>
+                <property name="climb-rate">0.10</property>
+                <property name="digits">2</property>
+                <property name="numeric">1</property>
+              </object>
+            </child>
+            <child>
               <object class="GtkComboBoxText" id="override-action-combo">
                 <items>
                   <item id="IGNORE" translatable="yes">IGNORE</item>
                   <item id="RESTORE" translatable="yes">RESTORE</item>
+                  <item id="DEFAULT" translatable="yes">DEFAULT</item>
                 </items>
               </object>
             </child>
@@ -55,6 +71,12 @@
           <object class="GtkBox">
             <property name="spacing">8</property>
             <child>
+              <object class="GtkSwitch" id="saved-window-active-switch">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+            <child>
               <object class="GtkLabel" id="saved-window-label">
                 <property name="hexpand">1</property>
                 <property name="halign">start</property>
@@ -76,13 +98,19 @@
                 <property name="receives-default">1</property>
               </object>
             </child>
+            <child>
+              <object class="GtkButton" id="saved-window-ignore-any-button">
+                <property name="label" translatable="yes">IGNORE (ANY)</property>
+                <property name="focusable">1</property>
+                <property name="receives-default">1</property>
+              </object>
+            </child>
           </object>
         </property>
       </object>
     </child>
     <child>
       <object class="GtkLabel" id="section-header-label">
-        <property name="vexpand">1</property>
         <property name="halign">start</property>
         <property name="margin-start">8</property>
         <property name="margin-end">8</property>
@@ -93,20 +121,6 @@
           <attribute name="weight" value="ultrabold"></attribute>
         </attributes>
       </object>
-    </child>
-    <child>
-      <object class="GtkSeparator" id="section-separator">
-        <property name="vexpand">1</property>
-      </object>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
     </child>
   </template>
 </interface>
