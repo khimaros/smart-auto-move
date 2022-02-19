@@ -248,6 +248,9 @@ function moveWindow(win, sw) {
 }
 
 function restoreWindow(win) {
+	let action = findOverrideAction(win, 1.0);
+	if (action !== Common.SYNC_MODE_RESTORE) return false;
+
 	let wsh = windowSectionHash(win);
 
 	let sw;
@@ -302,9 +305,6 @@ function syncWindows() {
 	cleanupWindows();
 	global.get_window_actors().forEach(function (actor) {
 		let win = actor.get_meta_window();
-
-		let action = findOverrideAction(win, 1.0);
-		if (action !== Common.SYNC_MODE_RESTORE) return false;
 
 		if (!restoreWindow(win))
 			ensureSavedWindow(win);

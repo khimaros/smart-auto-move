@@ -20,7 +20,6 @@ var TemplatesBox = GObject.registerClass({
         'override-delete-button',
         'saved-window-template-listboxrow',
         'saved-window-label',
-        'saved-window-active-switch',
         'saved-window-delete-button',
         'saved-window-ignore-button',
         'saved-window-ignore-any-button',
@@ -221,8 +220,6 @@ function loadSavedWindowsSetting(list_widget, list_objects) {
             let label_attrs = Pango.AttrList.new();
             if (!sw.occupied) label_attrs.insert(Pango.attr_strikethrough_new(true));
             label_widget.set_attributes(label_attrs);
-
-            row_templates._saved_window_active_switch.set_active(sw.occupied);
 
             let delete_widget = row_templates._saved_window_delete_button;
             let delete_signal = delete_widget.connect('clicked', function () {

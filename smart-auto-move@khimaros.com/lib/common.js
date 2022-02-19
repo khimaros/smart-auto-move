@@ -12,16 +12,16 @@ var SETTINGS_KEY_SYNC_MODE = 'sync-mode';
 var SETTINGS_KEY_OVERRIDES = 'overrides';
 
 // sync mode enum values
-const SYNC_MODE_IGNORE = 0;
-const SYNC_MODE_RESTORE = 1;
+var SYNC_MODE_IGNORE = 0;
+var SYNC_MODE_RESTORE = 1;
 
 // default setting values (see also gschema xml)
-const DEFAULT_DEBUG_LOGGING = false;
-const DEFAULT_STARTUP_DELAY_MS = 2500;
-const DEFAULT_SYNC_FREQUENCY_MS = 100;
-const DEFAULT_SAVE_FREQUENCY_MS = 1000;
-const DEFAULT_MATCH_THRESHOLD = 0.7;
-const DEFAULT_SYNC_MODE = SYNC_MODE_RESTORE;
+var DEFAULT_DEBUG_LOGGING = false;
+var DEFAULT_STARTUP_DELAY_MS = 2500;
+var DEFAULT_SYNC_FREQUENCY_MS = 100;
+var DEFAULT_SAVE_FREQUENCY_MS = 1000;
+var DEFAULT_MATCH_THRESHOLD = 0.7;
+var DEFAULT_SYNC_MODE = SYNC_MODE_RESTORE;
 
 function levensteinDistance(a, b) {
 	var m = [], i, j, min = Math.min;

@@ -104,6 +104,13 @@ $ gnome-extensions enable smart-auto-move@khimaros.com
 
 if you make a change to the source code, you will need to exit the session and start a new one.
 
+## publishing
+
+1. update `metadata.json` to latest uploaded version + 1
+1. generate the extension zip with `make`
+1. upload the zip to extensions.gnome.org
+1. repeat as needed if a version is rejected
+
 ## manual tests
 
 ### calculator

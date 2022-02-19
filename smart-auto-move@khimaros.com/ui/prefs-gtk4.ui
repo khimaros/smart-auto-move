@@ -42,7 +42,7 @@
                       <object class="GtkLabel">
                         <property name="halign">start</property>
                         <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Debug Logging</property>
+                        <property name="label" translatable="1">Debug Logging</property>
                         <layout>
                           <property name="column">0</property>
                           <property name="row">0</property>
@@ -65,7 +65,7 @@
                       <object class="GtkLabel">
                         <property name="halign">start</property>
                         <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Default Synchronization Mode</property>
+                        <property name="label" translatable="1">Default Synchronization Mode</property>
                         <layout>
                           <property name="column">0</property>
                           <property name="row">1</property>
@@ -77,7 +77,7 @@
                       <object class="GtkLabel">
                         <property name="halign">start</property>
                         <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Match Threshold</property>
+                        <property name="label" translatable="1">Match Threshold</property>
                         <layout>
                           <property name="column">0</property>
                           <property name="row">2</property>
@@ -89,7 +89,7 @@
                       <object class="GtkLabel">
                         <property name="halign">start</property>
                         <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Sync Frequency (milliseconds)</property>
+                        <property name="label" translatable="1">Sync Frequency (milliseconds)</property>
                         <layout>
                           <property name="column">0</property>
                           <property name="row">3</property>
@@ -101,7 +101,7 @@
                       <object class="GtkLabel">
                         <property name="halign">start</property>
                         <property name="hexpand">1</property>
-                        <property name="label" translatable="yes">Save Frequency (milliseconds)</property>
+                        <property name="label" translatable="1">Save Frequency (milliseconds)</property>
                         <layout>
                           <property name="column">0</property>
                           <property name="row">4</property>
@@ -166,7 +166,7 @@
         </property>
         <property name="tab">
           <object class="GtkLabel">
-            <property name="label" translatable="yes">General</property>
+            <property name="label" translatable="1">General</property>
           </object>
         </property>
       </object>
@@ -191,7 +191,7 @@
         </property>
         <property name="tab">
           <object class="GtkLabel">
-            <property name="label" translatable="yes">Saved Windows</property>
+            <property name="label" translatable="1">Saved Windows</property>
           </object>
         </property>
       </object>
@@ -224,7 +224,7 @@
                             </child>
                             <child>
                               <object class="GtkButton" id="overrides-add-window-button">
-                                <property name="label" translatable="yes">Choose Window</property>
+                                <property name="label" translatable="1">Choose Window</property>
                                 <property name="sensitive">0</property>
                                 <property name="focusable">1</property>
                                 <property name="receives-default">1</property>
@@ -242,7 +242,7 @@
         </property>
         <property name="tab">
           <object class="GtkLabel">
-            <property name="label" translatable="yes">Overrides</property>
+            <property name="label" translatable="1">Overrides</property>
           </object>
         </property>
       </object>
