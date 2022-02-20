@@ -248,9 +248,6 @@ function moveWindow(win, sw) {
 }
 
 function restoreWindow(win) {
-	let action = findOverrideAction(win, 1.0);
-	if (action !== Common.SYNC_MODE_RESTORE) return false;
-
 	let wsh = windowSectionHash(win);
 
 	let sw;
@@ -266,6 +263,9 @@ function restoreWindow(win) {
 	if (swi === undefined) return false;
 
 	if (windowDataEqual(sw, windowData(win))) return true;
+
+	let action = findOverrideAction(win, 1.0);
+	if (action !== Common.SYNC_MODE_RESTORE) return true;
 
 	//debug('restoreWindow() - found: ' + JSON.stringify(sw));
 
