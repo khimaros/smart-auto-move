@@ -236,13 +236,13 @@ function loadSavedWindowsSetting(list_widget, list_objects) {
                 let overrides = JSON.parse(settings.get_string(Common.SETTINGS_KEY_OVERRIDES));
                 if (!overrides.hasOwnProperty(wsh))
                     overrides[wsh] = new Array();
-                overrides[wsh].insert(o);
+                overrides[wsh].unshift(o);
                 settings.set_string(Common.SETTINGS_KEY_OVERRIDES, JSON.stringify(overrides));
             });
 
             let ignore_any_widget = row_templates._saved_window_ignore_any_button;
             let ignore_any_signal = ignore_any_widget.connect('clicked', function () {
-                let o = { action: 0 };
+                let o = { action: 0, threshold: settings.get_double(Common.SETTINGS_KEY_MATCH_THRESHOLD) };
                 //log('ADD OVERRIDE: ' + wsh + ' ' + o);
                 let overrides = JSON.parse(settings.get_string(Common.SETTINGS_KEY_OVERRIDES));
                 if (!overrides.hasOwnProperty(wsh))
