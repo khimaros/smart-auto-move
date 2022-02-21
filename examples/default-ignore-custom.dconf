@@ -1,0 +1,9 @@
+[/]
+debug-logging=false
+match-threshold=0.69999999999999996
+overrides='{"Firefox":[{"action":1,"threshold":0.8}],"com.belmoussaoui.Authenticator":[{"action":1,"threshold":0.7}],"geary":[{"action":1,"threshold":0.20000000000000007}],"Signal":[{"action":1,"threshold":0.1999999999999999}],"gnome-terminal-server":[{"action":1,"threshold":0.1999999999999999}]}'
+save-frequency=1500
+saved-windows='{}'
+startup-delay=2500
+sync-frequency=200
+sync-mode='IGNORE'
