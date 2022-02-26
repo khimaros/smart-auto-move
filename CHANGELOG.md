@@ -1,5 +1,42 @@
 # CHANGELOG
 
+## version 14
+
+- skip tooltips non-tasklist windows
+
+## version 13
+
+- prevent duplicating saved windows when ignored
+
+## version 12
+
+- default to global match threshold when adding override
+- fix creating individual window overrides
+
+## version 11
+
+- simplify override flow when default IGNORE
+- remove confusing toggle button
+- save windows even when ignored, just don't restore
+
+## version 10
+
+preferences ui improvements:
+
+- add switch to show "occupied" state in saved window list
+- allow switching to "DEFAULT" action for overrides
+- add threshold override spin button for apps
+- add an "IGNORE (ANY)" button to ignore entire window class
+
+## version 9
+
+testing and stability improvements
+
+- fix prefs crash on empty query
+- refactor modules to make testing easier
+- add unit tests for window/override matching
+- allow threshold overrides per-app (dconf only)
+
 ## version 8
 
 - code review cleanup

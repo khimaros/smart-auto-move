@@ -4,6 +4,7 @@
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
 const St = imports.gi.St;
+const Meta = imports.gi.Meta;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Common = Me.imports.lib.common;
@@ -301,10 +302,22 @@ function cleanupWindows() {
 	});
 }
 
+function shouldSkipWindow(win) {
+	debug('shouldSkipWindow() ' + win.get_title() + ' ' + win.is_skip_taskbar() + ' ' + win.get_window_type());
+
+	if (win.is_skip_taskbar()) return true;
+
+	if (win.get_window_type() !== Meta.WindowType.NORMAL) return true;
+
+	return false;
+}
+
 function syncWindows() {
 	cleanupWindows();
 	global.get_window_actors().forEach(function (actor) {
 		let win = actor.get_meta_window();
+
+		if (shouldSkipWindow(win)) return;
 
 		if (!restoreWindow(win))
 			ensureSavedWindow(win);

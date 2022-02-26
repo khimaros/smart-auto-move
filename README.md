@@ -63,7 +63,7 @@ $ dconf write /org/gnome/shell/extensions/smart-auto-move/overrides '{"firefox":
 show all saved firefox windows (N.B. `jq` will fail if window title contains `\`):
 
 ```
-$ dconf read /org/gnome/shell/extensions/smart-auto-move/saved-windows | sed "s/^'//; s/'$//" | jq -C .firefox | less -SR
+$ dconf read /org/gnome/shell/extensions/smart-auto-move/saved-windows | sed "s/^'//; s/'$//" | jq -C .Firefox | less -SR
 ```
 
 there are example configs in the `examples/` dir which can be loaded (N.B. while extension is disabled) with:
