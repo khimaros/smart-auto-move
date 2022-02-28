@@ -14,9 +14,45 @@ smart-auto-move is a Gnome Shell extension which keeps track of all application 
 
 ![screenshot: overrides preferences](docs/screenshot-overrides.png)
 
+## getting started
+
+most settings can be modified via the extension preferences dialog.
+
+### defaults
+
+the first step is to choose your **Default Synchronization Mode**: `IGNORE` or `RESTORE`.
+
+`IGNORE` will keep track of windows but will not restore any unless an **Override** is created.
+
+`RESTORE` will keep track and restore all windows unless an **Override** is created.
+
+default **Match Threshold** is probably fine to keep as is.
+
+if you'd like to optimize resource usage, you can change **Sync Frequency** and **Save Frequency**.
+
+### overrides
+
+to create an override, visit the **Saved Windows** tab.
+
+to create an override for a specific window, click **OVERRIDE**.
+
+to create an override for an entire application, click **OVERRIDE (ANY)**.
+
+after you've created an override, visit the **Overrides** tab.
+
+you can change the IGNORE/RESTORE behavior here for apps and windows.
+
+for apps, you can also control the Match Threshold.
+
+if you have an app which needs looser matching (eg. if the title changes between restarts) reduce the threshold.
+
+for tighter matching, increase it.
+
 ## limitations
 
 terminals which include the current directory in the title may not reach the match threshold when restarted if they do not preserve the working directory across restarts.
+
+to work around this, create a per-app override (see above) and set the threshold to a lower value, eg. `0.2`
 
 ## behavior
 
