@@ -44,5 +44,10 @@
       <summary>Overrides</summary>
       <description>Overrides for restored window data.</description>
     </key>
+    <key name="freeze-saves" type="b">
+      <default>false</default>
+      <summary>Freeze Saves</summary>
+      <description>Do not update saved window data.</description>
+    </key>
   </schema>
 </schemalist>

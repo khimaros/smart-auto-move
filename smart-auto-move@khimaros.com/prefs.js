@@ -84,6 +84,14 @@ function buildPrefsWidget() {
         Gio.SettingsBindFlags.DEFAULT
     );
 
+    let freeze_saves_widget = builder.get_object('freeze-saves-switch');
+    settings.bind(
+        Common.SETTINGS_KEY_FREEZE_SAVES,
+        freeze_saves_widget,
+        'active',
+        Gio.SettingsBindFlags.DEFAULT
+    );
+
     /// SAVED WINDOWS
 
     let saved_windows_list_widget = builder.get_object('saved-windows-listbox');

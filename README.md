@@ -30,6 +30,8 @@ default **Match Threshold** is probably fine to keep as is.
 
 if you'd like to optimize resource usage, you can change **Sync Frequency** and **Save Frequency**.
 
+once you are happy with your setup, you can **Freeze Saves** to prevent any changes to your saved windows. note, however, that this will pvevent windows from being tracked when their titles change.
+
 ### overrides
 
 to create an override, visit the **Saved Windows** tab.

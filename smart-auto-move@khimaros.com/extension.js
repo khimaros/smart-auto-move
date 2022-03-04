@@ -16,6 +16,7 @@ let syncFrequencyMs;
 let saveFrequencyMs;
 let matchThreshold;
 let syncMode;
+let freezeSaves;
 let overrides;
 let savedWindows;
 
@@ -32,6 +33,7 @@ let changedSyncFrequencySignal;
 let changedSaveFrequencySignal;
 let changedMatchThresholdSignal;
 let changedSyncModeSignal;
+let changedFreezeSavesSignal;
 let changedOverridesSignal;
 let changedSavedWindowsSignal;
 
@@ -75,6 +77,7 @@ function initializeSettings() {
 	saveFrequencyMs = Common.DEFAULT_SAVE_FREQUENCY_MS;
 	matchThreshold = Common.DEFAULT_MATCH_THRESHOLD;
 	syncMode = Common.DEFAULT_SYNC_MODE;
+	freezeSaves = Common.DEFAULT_FREEZE_SAVES;
 	overrides = new Object();
 	savedWindows = new Object();
 
@@ -89,6 +92,7 @@ function cleanupSettings() {
 	saveFrequencyMs = null;
 	matchThreshold = null;
 	syncMode = null;
+	freezeSaves = null;
 	overrides = null;
 	savedWindows = null;
 }
@@ -101,6 +105,7 @@ function restoreSettings() {
 	handleChangedSaveFrequency();
 	handleChangedMatchThreshold();
 	handleChangedSyncMode();
+	handleChangedFreezeSaves();
 	handleChangedOverrides();
 	handleChangedSavedWindows();
 	dumpSavedWindows();
@@ -113,6 +118,7 @@ function saveSettings() {
 	settings.set_int(Common.SETTINGS_KEY_SAVE_FREQUENCY, saveFrequencyMs);
 	settings.set_double(Common.SETTINGS_KEY_MATCH_THRESHOLD, matchThreshold);
 	settings.set_enum(Common.SETTINGS_KEY_SYNC_MODE, syncMode);
+	settings.set_boolean(Common.SETTINGS_KEY_FREEZE_SAVES, freezeSaves);
 
 	let newOverrides = JSON.stringify(overrides);
 	settings.set_string(Common.SETTINGS_KEY_OVERRIDES, newOverrides);
@@ -210,6 +216,8 @@ function ensureSavedWindow(win) {
 	let wh = windowHash(win);
 
 	if (windowNewerThan(win, startupDelayMs)) return;
+
+	if (freezeSaves) return;
 
 	//debug('saveWindow(): ' + win.get_id());
 	if (!updateSavedWindow(win)) {
@@ -368,6 +376,11 @@ function handleChangedSyncMode() {
 	debug('handleChangedSyncMode(): ' + syncMode);
 }
 
+function handleChangedFreezeSaves() {
+	freezeSaves = settings.get_boolean(Common.SETTINGS_KEY_FREEZE_SAVES);
+	debug('[smart-auto-move] handleChangedFreezeSaves(): ' + freezeSaves);
+}
+
 function handleChangedOverrides() {
 	overrides = JSON.parse(settings.get_string(Common.SETTINGS_KEY_OVERRIDES));
 	debug('handleChangedOverrides(): ' + JSON.stringify(overrides));
@@ -411,6 +424,7 @@ function connectSettingChangedSignals() {
 	changedSaveFrequencySignal = settings.connect('changed::' + Common.SETTINGS_KEY_SAVE_FREQUENCY, handleChangedSaveFrequency);
 	changedMatchThresholdSignal = settings.connect('changed::' + Common.SETTINGS_KEY_MATCH_THRESHOLD, handleChangedMatchThreshold);
 	changedSyncModeSignal = settings.connect('changed::' + Common.SETTINGS_KEY_SYNC_MODE, handleChangedSyncMode);
+	changedFreezeSavesSignal = settings.connect('changed::' + Common.SETTINGS_KEY_FREEZE_SAVES, handleChangedFreezeSaves);
 	changedOverridesSignal = settings.connect('changed::' + Common.SETTINGS_KEY_OVERRIDES, handleChangedOverrides);
 	changedSavedWindowsSignal = settings.connect('changed::' + Common.SETTINGS_KEY_SAVED_WINDOWS, handleChangedSavedWindows);
 }
