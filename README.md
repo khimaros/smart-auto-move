@@ -142,6 +142,10 @@ $ gnome-extensions enable smart-auto-move@khimaros.com
 
 if you make a change to the source code, you will need to exit the session and start a new one.
 
+### adding new preferences
+
+see commit 9edd9e3210a1541d5c2915943c7a2b238ce7a856 for an end-to-end example.
+
 ## publishing
 
 1. update `metadata.json` to latest uploaded version + 1
