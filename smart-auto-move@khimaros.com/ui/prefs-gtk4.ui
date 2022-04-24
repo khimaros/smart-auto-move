@@ -19,17 +19,21 @@
     <property name="page-increment">100</property>
   </object>
   <object class="GtkNotebook" id="prefs-notebook">
-    <property name="width-request">800</property>
-    <property name="height-request">600</property>
     <property name="focusable">1</property>
+    <property name="hexpand">1</property>
+    <property name="vexpand">1</property>
     <property name="scrollable">1</property>
     <child>
       <object class="GtkNotebookPage">
         <property name="child">
           <object class="GtkScrolledWindow">
             <property name="focusable">1</property>
+            <property name="hexpand">1</property>
+            <property name="vexpand">1</property>
             <property name="child">
               <object class="GtkViewport">
+                <property name="hexpand">1</property>
+                <property name="vexpand">1</property>
                 <property name="child">
                   <object class="GtkGrid">
                     <property name="valign">start</property>
@@ -37,6 +41,8 @@
                     <property name="margin-end">8</property>
                     <property name="margin-top">8</property>
                     <property name="margin-bottom">8</property>
+                    <property name="hexpand">1</property>
+                    <property name="vexpand">1</property>
                     <property name="row-spacing">8</property>
                     <child>
                       <object class="GtkLabel">
@@ -208,10 +214,16 @@
         <property name="child">
           <object class="GtkScrolledWindow">
             <property name="focusable">1</property>
+            <property name="hexpand">1</property>
+            <property name="vexpand">1</property>
             <property name="child">
               <object class="GtkViewport">
+                <property name="hexpand">1</property>
+                <property name="vexpand">1</property>
                 <property name="child">
                   <object class="GtkListBox" id="saved-windows-listbox">
+                    <property name="hexpand">1</property>
+                    <property name="vexpand">1</property>
                     <property name="selection-mode">none</property>
                     <property name="activate-on-single-click">0</property>
                   </object>
@@ -233,10 +245,16 @@
         <property name="child">
           <object class="GtkScrolledWindow">
             <property name="focusable">1</property>
+            <property name="hexpand">1</property>
+            <property name="vexpand">1</property>
             <property name="child">
               <object class="GtkViewport">
+                <property name="hexpand">1</property>
+                <property name="vexpand">1</property>
                 <property name="child">
                   <object class="GtkListBox" id="overrides-listbox">
+                    <property name="hexpand">1</property>
+                    <property name="vexpand">1</property>
                     <property name="selection-mode">none</property>
                     <property name="activate-on-single-click">0</property>
                     <child>
