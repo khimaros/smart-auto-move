@@ -17,6 +17,7 @@ let saveFrequencyMs;
 let matchThreshold;
 let syncMode;
 let freezeSaves;
+let activateWorkspace;
 let overrides;
 let savedWindows;
 
@@ -34,6 +35,7 @@ let changedSaveFrequencySignal;
 let changedMatchThresholdSignal;
 let changedSyncModeSignal;
 let changedFreezeSavesSignal;
+let changedActivateWorkspaceSignal;
 let changedOverridesSignal;
 let changedSavedWindowsSignal;
 
@@ -51,6 +53,9 @@ function enable() {
 	debug('enable()');
 
 	restoreSettings();
+
+	// maybe Meta.prefs_get_dynamic_workspaces()
+	// maybe Meta.prefs_set_num_workspaces() 
 
 	connectSignals();
 }
@@ -78,6 +83,7 @@ function initializeSettings() {
 	matchThreshold = Common.DEFAULT_MATCH_THRESHOLD;
 	syncMode = Common.DEFAULT_SYNC_MODE;
 	freezeSaves = Common.DEFAULT_FREEZE_SAVES;
+	activateWorkspace = Common.DEFAULT_ACTIVATE_WORKSPACE;
 	overrides = new Object();
 	savedWindows = new Object();
 
@@ -93,6 +99,7 @@ function cleanupSettings() {
 	matchThreshold = null;
 	syncMode = null;
 	freezeSaves = null;
+	activateWorkspace = null;
 	overrides = null;
 	savedWindows = null;
 }
@@ -106,6 +113,7 @@ function restoreSettings() {
 	handleChangedMatchThreshold();
 	handleChangedSyncMode();
 	handleChangedFreezeSaves();
+	handleChangedActivateWorkspace();
 	handleChangedOverrides();
 	handleChangedSavedWindows();
 	dumpSavedWindows();
@@ -119,6 +127,7 @@ function saveSettings() {
 	settings.set_double(Common.SETTINGS_KEY_MATCH_THRESHOLD, matchThreshold);
 	settings.set_enum(Common.SETTINGS_KEY_SYNC_MODE, syncMode);
 	settings.set_boolean(Common.SETTINGS_KEY_FREEZE_SAVES, freezeSaves);
+	settings.set_boolean(Common.SETTINGS_KEY_ACTIVATE_WORKSPACE, activateWorkspace);
 
 	let newOverrides = JSON.stringify(overrides);
 	settings.set_string(Common.SETTINGS_KEY_OVERRIDES, newOverrides);
@@ -141,6 +150,7 @@ function windowReady(win) {
 	return true;
 }
 
+// https://gjs-docs-experimental.web.app/meta-10/Window/
 function windowData(win) {
 	let win_rect = win.get_frame_rect();
 	return {
@@ -148,8 +158,15 @@ function windowData(win) {
 		hash: windowHash(win),
 		sequence: win.get_stable_sequence(),
 		title: win.get_title(),
+		//sandboxed_app_id: win.get_sandboxed_app_id(),
+		//pid: win.get_pid(),
+		//user_time: win.get_user_time(),
 		workspace: win.get_workspace().index(),
 		maximized: win.get_maximized(),
+		fullscreen: win.is_fullscreen(),
+		above: win.is_above(),
+		monitor: win.get_monitor(),
+		//on_all_workspaces: win.is_on_all_workspaces(),
 		x: win_rect.x,
 		y: win_rect.y,
 		width: win_rect.width,
@@ -178,6 +195,7 @@ function windowNewerThan(win, age) {
 	let wh = windowHash(win);
 
 	// TODO: consider using a state machine here: CREATED, MOVED, SAVED, etc.
+	// TODO: win.get_user_time() might also be useful here.
 	if (activeWindows.get(wh) === undefined) {
 		activeWindows.set(wh, Date.now());
 	}
@@ -219,7 +237,7 @@ function ensureSavedWindow(win) {
 
 	if (freezeSaves) return;
 
-	//debug('saveWindow(): ' + win.get_id());
+	//debug('saveWindow(): ' + windowHash(win);
 	if (!updateSavedWindow(win)) {
 		pushSavedWindow(win);
 	}
@@ -240,16 +258,27 @@ function findOverrideAction(win, threshold) {
 
 function moveWindow(win, sw) {
 	//debug('moveWindow(): ' + JSON.stringify(sw));
+
+	win.move_to_monitor(sw.monitor);
+
 	let ws = global.workspaceManager.get_workspace_by_index(sw.workspace);
 	win.change_workspace(ws);
+
 	win.move_resize_frame(false, sw.x, sw.y, sw.width, sw.height);
 	if (sw.maximized) win.maximize(sw.maximized);
-
 	// NOTE: these additional move/maximize operations were needed in order
 	// to convince Firefox to stay where we put it.
 	win.move_resize_frame(false, sw.x, sw.y, sw.width, sw.height);
 	if (sw.maximized) win.maximize(sw.maximized);
 	win.move_resize_frame(false, sw.x, sw.y, sw.width, sw.height);
+
+	if (sw.fullscreen) win.make_fullscreen();
+
+	if (sw.above) win.make_above();
+
+	//if (sw.on_all_workspaces) ...
+
+	if (activateWorkspace && !ws.active) ws.activate(true)
 
 	let nsw = windowData(win);
 
@@ -381,6 +410,11 @@ function handleChangedFreezeSaves() {
 	debug('[smart-auto-move] handleChangedFreezeSaves(): ' + freezeSaves);
 }
 
+function handleChangedActivateWorkspace() {
+	activateWorkspace = settings.get_boolean(Common.SETTINGS_KEY_ACTIVATE_WORKSPACE);
+	debug('[smart-auto-move] handleChangedActivateWorkspace(): ' + activateWorkspace);
+}
+
 function handleChangedOverrides() {
 	overrides = JSON.parse(settings.get_string(Common.SETTINGS_KEY_OVERRIDES));
 	debug('handleChangedOverrides(): ' + JSON.stringify(overrides));
@@ -425,6 +459,7 @@ function connectSettingChangedSignals() {
 	changedMatchThresholdSignal = settings.connect('changed::' + Common.SETTINGS_KEY_MATCH_THRESHOLD, handleChangedMatchThreshold);
 	changedSyncModeSignal = settings.connect('changed::' + Common.SETTINGS_KEY_SYNC_MODE, handleChangedSyncMode);
 	changedFreezeSavesSignal = settings.connect('changed::' + Common.SETTINGS_KEY_FREEZE_SAVES, handleChangedFreezeSaves);
+	changedActivateWorkspaceSignal = settings.connect('changed::' + Common.SETTINGS_KEY_ACTIVATE_WORKSPACE, handleChangedActivateWorkspace);
 	changedOverridesSignal = settings.connect('changed::' + Common.SETTINGS_KEY_OVERRIDES, handleChangedOverrides);
 	changedSavedWindowsSignal = settings.connect('changed::' + Common.SETTINGS_KEY_SAVED_WINDOWS, handleChangedSavedWindows);
 }

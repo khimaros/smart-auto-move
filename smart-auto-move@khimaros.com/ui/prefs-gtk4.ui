@@ -46,6 +46,7 @@
                     <property name="row-spacing">8</property>
                     <child>
                       <object class="GtkLabel">
+                        <property name="tooltip-text" translatable="1">Write detailed logs about extension behavior.</property>
                         <property name="halign">start</property>
                         <property name="hexpand">1</property>
                         <property name="label" translatable="1">Debug Logging</property>
@@ -69,6 +70,7 @@
                     </child>
                     <child>
                       <object class="GtkLabel">
+                        <property name="tooltip-text" translatable="1">Default mode when synchronizing windows.</property>
                         <property name="halign">start</property>
                         <property name="hexpand">1</property>
                         <property name="label" translatable="1">Default Synchronization Mode</property>
@@ -81,6 +83,7 @@
                     </child>
                     <child>
                       <object class="GtkLabel">
+                        <property name="tooltip-text" translatable="1">Minimum threshold for matching restored windows.</property>
                         <property name="halign">start</property>
                         <property name="hexpand">1</property>
                         <property name="label" translatable="1">Match Threshold</property>
@@ -93,6 +96,7 @@
                     </child>
                     <child>
                       <object class="GtkLabel">
+                        <property name="tooltip-text" translatable="1">Frequency in milliseconds to synchronize changes to active windows into the in-memory store.</property>
                         <property name="halign">start</property>
                         <property name="hexpand">1</property>
                         <property name="label" translatable="1">Sync Frequency (milliseconds)</property>
@@ -105,6 +109,7 @@
                     </child>
                     <child>
                       <object class="GtkLabel">
+                        <property name="tooltip-text" translatable="1">Frequency in milliseconds to persist the in-memory store to disk.</property>
                         <property name="halign">start</property>
                         <property name="hexpand">1</property>
                         <property name="label" translatable="1">Save Frequency (milliseconds)</property>
@@ -166,6 +171,7 @@
                     </child>
                     <child>
                       <object class="GtkLabel">
+                        <property name="tooltip-text" translatable="1">Do not update saved window data.</property>
                         <property name="halign">start</property>
                         <property name="hexpand">1</property>
                         <property name="label" translatable="1">Freeze Saves</property>
@@ -185,6 +191,38 @@
                           <property name="row">5</property>
                         </layout>
                       </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="tooltip-text" translatable="1">Follow apps when they are moved to another workspace.</property>
+                        <property name="halign">start</property>
+                        <property name="hexpand">1</property>
+                        <property name="label" translatable="1">Activate Workspace</property>
+                        <layout>
+                          <property name="column">0</property>
+                          <property name="row">6</property>
+                        </layout>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSwitch" id="activate-workspace-switch">
+                        <property name="focusable">1</property>
+                        <property name="halign">end</property>
+                        <property name="valign">center</property>
+                        <layout>
+                          <property name="column">4</property>
+                          <property name="row">6</property>
+                        </layout>
+                      </object>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
                     </child>
                     <child>
                       <placeholder/>

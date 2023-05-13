@@ -40,7 +40,7 @@ function buildPrefsWidget() {
 
     builder.add_from_file(Me.path + '/ui/prefs-gtk4.ui');
 
-    let notebook = builder.get_object('prefs-notebook');
+    let root = builder.get_object('prefs-notebook');
 
     /// GENERAL
 
@@ -92,6 +92,14 @@ function buildPrefsWidget() {
         Gio.SettingsBindFlags.DEFAULT
     );
 
+    let activate_workspace_widget = builder.get_object('activate-workspace-switch');
+    settings.bind(
+        Common.SETTINGS_KEY_ACTIVATE_WORKSPACE,
+        activate_workspace_widget,
+        'active',
+        Gio.SettingsBindFlags.DEFAULT
+    );
+
     /// SAVED WINDOWS
 
     let saved_windows_list_widget = builder.get_object('saved-windows-listbox');
@@ -110,7 +118,7 @@ function buildPrefsWidget() {
     loadOverridesSetting(overrides_list_widget, overrides_list_objects);
     changedOverridesSignal = settings.connect('changed::' + Common.SETTINGS_KEY_OVERRIDES, function () { loadOverridesSetting(overrides_list_widget, overrides_list_objects); });
 
-    return notebook;
+    return root;
 }
 
 function loadOverridesSetting(list_widget, list_objects) {

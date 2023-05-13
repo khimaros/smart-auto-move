@@ -1,4 +1,4 @@
-ack: smart-auto-move@khimaros.com.shell-extension.zip
+pack: smart-auto-move@khimaros.com.shell-extension.zip
 .PHONY: pack
 
 clean:
@@ -40,3 +40,7 @@ uninstall:
 start: install
 	MUTTER_DEBUG_DUMMY_MODE_SPECS=1600x900 dbus-run-session -- gnome-shell --nested --wayland
 .PHONY: start
+
+start-prefs: install
+	gnome-extensions prefs smart-auto-move@khimaros.com
+.PHONY: start-prefs

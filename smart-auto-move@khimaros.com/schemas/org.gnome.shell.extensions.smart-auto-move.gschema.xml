@@ -49,5 +49,10 @@
       <summary>Freeze Saves</summary>
       <description>Do not update saved window data.</description>
     </key>
+    <key name="activate-workspace" type="b">
+      <default>true</default>
+      <summary>Activate Workspace</summary>
+      <description>Follow apps when they are moved to another workspace.</description>
+    </key>
   </schema>
 </schemalist>
