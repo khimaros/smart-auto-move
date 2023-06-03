@@ -54,5 +54,10 @@
       <summary>Activate Workspace</summary>
       <description>Follow apps when they are moved to another workspace.</description>
     </key>
+    <key name="ignore-position" type="b">
+      <default>false</default>
+      <summary>Ignore position</summary>
+      <description>Do not restore windows' position.</description>
+    </key>
   </schema>
 </schemalist>

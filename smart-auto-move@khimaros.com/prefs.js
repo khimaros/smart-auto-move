@@ -99,6 +99,14 @@ function buildPrefsWidget() {
         'active',
         Gio.SettingsBindFlags.DEFAULT
     );
+    
+    let ignore_position_widget = builder.get_object('ignore-position-switch');
+    settings.bind(
+        Common.SETTINGS_KEY_IGNORE_POSITION,
+        ignore_position_widget,
+        'active',
+        Gio.SettingsBindFlags.DEFAULT
+    );
 
     /// SAVED WINDOWS
 
