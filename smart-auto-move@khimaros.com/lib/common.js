@@ -11,6 +11,7 @@ var SETTINGS_KEY_MATCH_THRESHOLD = 'match-threshold';
 var SETTINGS_KEY_SYNC_MODE = 'sync-mode';
 var SETTINGS_KEY_FREEZE_SAVES = 'freeze-saves';
 var SETTINGS_KEY_ACTIVATE_WORKSPACE = 'activate-workspace';
+var SETTINGS_KEY_IGNORE_POSITION = "ignore-position";
 var SETTINGS_KEY_OVERRIDES = 'overrides';
 
 // sync mode enum values
@@ -26,6 +27,7 @@ var DEFAULT_MATCH_THRESHOLD = 0.7;
 var DEFAULT_SYNC_MODE = SYNC_MODE_RESTORE;
 var DEFAULT_FREEZE_SAVES = false;
 var DEFAULT_ACTIVATE_WORKSPACE = true;
+var DEFAULT_IGNORE_POSITION = false;
 
 function levensteinDistance(a, b) {
 	var m = [], i, j, min = Math.min;

@@ -18,6 +18,7 @@ let matchThreshold;
 let syncMode;
 let freezeSaves;
 let activateWorkspace;
+let ignorePosition;
 let overrides;
 let savedWindows;
 
@@ -36,6 +37,7 @@ let changedMatchThresholdSignal;
 let changedSyncModeSignal;
 let changedFreezeSavesSignal;
 let changedActivateWorkspaceSignal;
+let changedIgnorePositionSignal;
 let changedOverridesSignal;
 let changedSavedWindowsSignal;
 
@@ -84,6 +86,7 @@ function initializeSettings() {
 	syncMode = Common.DEFAULT_SYNC_MODE;
 	freezeSaves = Common.DEFAULT_FREEZE_SAVES;
 	activateWorkspace = Common.DEFAULT_ACTIVATE_WORKSPACE;
+	ignorePosition = Common.DEFAULT_IGNORE_POSITION;
 	overrides = new Object();
 	savedWindows = new Object();
 
@@ -100,6 +103,7 @@ function cleanupSettings() {
 	syncMode = null;
 	freezeSaves = null;
 	activateWorkspace = null;
+	ignorePosition = null;
 	overrides = null;
 	savedWindows = null;
 }
@@ -114,6 +118,7 @@ function restoreSettings() {
 	handleChangedSyncMode();
 	handleChangedFreezeSaves();
 	handleChangedActivateWorkspace();
+	handleChangedIgnorePosition();
 	handleChangedOverrides();
 	handleChangedSavedWindows();
 	dumpSavedWindows();
@@ -128,6 +133,7 @@ function saveSettings() {
 	settings.set_enum(Common.SETTINGS_KEY_SYNC_MODE, syncMode);
 	settings.set_boolean(Common.SETTINGS_KEY_FREEZE_SAVES, freezeSaves);
 	settings.set_boolean(Common.SETTINGS_KEY_ACTIVATE_WORKSPACE, activateWorkspace);
+	settings.set_boolean(Common.SETTINGS_KEY_IGNORE_POSITION, ignorePosition);
 
 	let newOverrides = JSON.stringify(overrides);
 	settings.set_string(Common.SETTINGS_KEY_OVERRIDES, newOverrides);
@@ -264,6 +270,12 @@ function moveWindow(win, sw) {
 	let ws = global.workspaceManager.get_workspace_by_index(sw.workspace);
 	win.change_workspace(ws);
 
+	if (ignorePosition) {
+	    let cw = windowData(win);
+	    sw.x = cw.x;
+	    sw.y = cw.y;
+	}
+
 	win.move_resize_frame(false, sw.x, sw.y, sw.width, sw.height);
 	if (sw.maximized) win.maximize(sw.maximized);
 	// NOTE: these additional move/maximize operations were needed in order
@@ -311,7 +323,9 @@ function restoreWindow(win) {
 
 	let nsw = moveWindow(win, sw);
 
-	if (!(sw.x === nsw.x && sw.y === nsw.y)) return true;
+	if (!ignorePosition) {
+		if (!(sw.x === nsw.x && sw.y === nsw.y)) return true;
+	}
 
 	debug('restoreWindow() - moved: ' + pWinRepr + ' => ' + JSON.stringify(nsw));
 
@@ -415,6 +429,11 @@ function handleChangedActivateWorkspace() {
 	debug('[smart-auto-move] handleChangedActivateWorkspace(): ' + activateWorkspace);
 }
 
+function handleChangedIgnorePosition() {
+	ignorePosition = settings.get_boolean(Common.SETTINGS_KEY_IGNORE_POSITION);
+	debug('[smart-auto-move] handleChangedIgnorePosition(): ' + ignorePosition);
+}
+
 function handleChangedOverrides() {
 	overrides = JSON.parse(settings.get_string(Common.SETTINGS_KEY_OVERRIDES));
 	debug('handleChangedOverrides(): ' + JSON.stringify(overrides));
@@ -460,6 +479,7 @@ function connectSettingChangedSignals() {
 	changedSyncModeSignal = settings.connect('changed::' + Common.SETTINGS_KEY_SYNC_MODE, handleChangedSyncMode);
 	changedFreezeSavesSignal = settings.connect('changed::' + Common.SETTINGS_KEY_FREEZE_SAVES, handleChangedFreezeSaves);
 	changedActivateWorkspaceSignal = settings.connect('changed::' + Common.SETTINGS_KEY_ACTIVATE_WORKSPACE, handleChangedActivateWorkspace);
+	changedIgnorePositionSignal = settings.connect('changed::' + Common.SETTINGS_KEY_IGNORE_POSITION, handleChangedIgnorePosition);
 	changedOverridesSignal = settings.connect('changed::' + Common.SETTINGS_KEY_OVERRIDES, handleChangedOverrides);
 	changedSavedWindowsSignal = settings.connect('changed::' + Common.SETTINGS_KEY_SAVED_WINDOWS, handleChangedSavedWindows);
 }
