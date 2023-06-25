@@ -107,6 +107,14 @@ function buildPrefsWidget() {
         'active',
         Gio.SettingsBindFlags.DEFAULT
     );
+    
+    let ignore_workspace_widget = builder.get_object('ignore-workspace-switch');
+    settings.bind(
+        Common.SETTINGS_KEY_IGNORE_WORKSPACE,
+        ignore_workspace_widget,
+        'active',
+        Gio.SettingsBindFlags.DEFAULT
+    );
 
     /// SAVED WINDOWS
 

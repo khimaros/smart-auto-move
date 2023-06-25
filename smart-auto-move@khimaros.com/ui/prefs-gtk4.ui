@@ -239,7 +239,27 @@
                       </object>
                     </child>
                     <child>
-                      <placeholder/>
+                      <object class="GtkLabel">
+                        <property name="tooltip-text" translatable="1">Do not restore windows' workspace.</property>
+                        <property name="halign">start</property>
+                        <property name="hexpand">1</property>
+                        <property name="label" translatable="1">Ignore Workspace</property>
+                        <layout>
+                          <property name="column">0</property>
+                          <property name="row">8</property>
+                        </layout>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSwitch" id="ignore-workspace-switch">
+                        <property name="focusable">1</property>
+                        <property name="halign">end</property>
+                        <property name="valign">center</property>
+                        <layout>
+                          <property name="column">4</property>
+                          <property name="row">8</property>
+                        </layout>
+                      </object>
                     </child>
                     <child>
                       <placeholder/>

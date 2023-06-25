@@ -59,5 +59,10 @@
       <summary>Ignore position</summary>
       <description>Do not restore windows' position.</description>
     </key>
+    <key name="ignore-workspace" type="b">
+      <default>false</default>
+      <summary>Ignore workspace</summary>
+      <description>Do not restore windows' workspace.</description>
+    </key>
   </schema>
 </schemalist>
