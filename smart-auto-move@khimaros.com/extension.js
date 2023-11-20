@@ -43,7 +43,7 @@ let changedSavedWindowsSignal;
 
 //// EXTENSION CLASS
 
-export default class BedtimeMode extends Extension {
+export default class SmartAutoMove extends Extension {
 	constructor(metadata) {
 		super(metadata);
 
