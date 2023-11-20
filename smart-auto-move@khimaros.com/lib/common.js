@@ -1,37 +1,37 @@
 'use strict';
 
 // setting constants
-var SETTINGS_SCHEMA = 'org.gnome.shell.extensions.smart-auto-move';
-var SETTINGS_KEY_SAVED_WINDOWS = 'saved-windows';
-var SETTINGS_KEY_DEBUG_LOGGING = 'debug-logging';
-var SETTINGS_KEY_STARTUP_DELAY = 'startup-delay';
-var SETTINGS_KEY_SYNC_FREQUENCY = 'sync-frequency';
-var SETTINGS_KEY_SAVE_FREQUENCY = 'save-frequency';
-var SETTINGS_KEY_MATCH_THRESHOLD = 'match-threshold';
-var SETTINGS_KEY_SYNC_MODE = 'sync-mode';
-var SETTINGS_KEY_FREEZE_SAVES = 'freeze-saves';
-var SETTINGS_KEY_ACTIVATE_WORKSPACE = 'activate-workspace';
-var SETTINGS_KEY_IGNORE_POSITION = "ignore-position";
-var SETTINGS_KEY_IGNORE_WORKSPACE = "ignore-workspace";
-var SETTINGS_KEY_OVERRIDES = 'overrides';
+export const SETTINGS_SCHEMA = 'org.gnome.shell.extensions.smart-auto-move';
+export const SETTINGS_KEY_SAVED_WINDOWS = 'saved-windows';
+export const SETTINGS_KEY_DEBUG_LOGGING = 'debug-logging';
+export const SETTINGS_KEY_STARTUP_DELAY = 'startup-delay';
+export const SETTINGS_KEY_SYNC_FREQUENCY = 'sync-frequency';
+export const SETTINGS_KEY_SAVE_FREQUENCY = 'save-frequency';
+export const SETTINGS_KEY_MATCH_THRESHOLD = 'match-threshold';
+export const SETTINGS_KEY_SYNC_MODE = 'sync-mode';
+export const SETTINGS_KEY_FREEZE_SAVES = 'freeze-saves';
+export const SETTINGS_KEY_ACTIVATE_WORKSPACE = 'activate-workspace';
+export const SETTINGS_KEY_IGNORE_POSITION = "ignore-position";
+export const SETTINGS_KEY_IGNORE_WORKSPACE = "ignore-workspace";
+export const SETTINGS_KEY_OVERRIDES = 'overrides';
 
 // sync mode enum values
-var SYNC_MODE_IGNORE = 0;
-var SYNC_MODE_RESTORE = 1;
+export const SYNC_MODE_IGNORE = 0;
+export const SYNC_MODE_RESTORE = 1;
 
 // default setting values (see also gschema xml)
-var DEFAULT_DEBUG_LOGGING = false;
-var DEFAULT_STARTUP_DELAY_MS = 2500;
-var DEFAULT_SYNC_FREQUENCY_MS = 100;
-var DEFAULT_SAVE_FREQUENCY_MS = 1000;
-var DEFAULT_MATCH_THRESHOLD = 0.7;
-var DEFAULT_SYNC_MODE = SYNC_MODE_RESTORE;
-var DEFAULT_FREEZE_SAVES = false;
-var DEFAULT_ACTIVATE_WORKSPACE = true;
-var DEFAULT_IGNORE_POSITION = false;
-var DEFAULT_IGNORE_WORKSPACE = false;
+export const DEFAULT_DEBUG_LOGGING = false;
+export const DEFAULT_STARTUP_DELAY_MS = 2500;
+export const DEFAULT_SYNC_FREQUENCY_MS = 100;
+export const DEFAULT_SAVE_FREQUENCY_MS = 1000;
+export const DEFAULT_MATCH_THRESHOLD = 0.7;
+export const DEFAULT_SYNC_MODE = SYNC_MODE_RESTORE;
+export const DEFAULT_FREEZE_SAVES = false;
+export const DEFAULT_ACTIVATE_WORKSPACE = true;
+export const DEFAULT_IGNORE_POSITION = false;
+export const DEFAULT_IGNORE_WORKSPACE = false;
 
-function levensteinDistance(a, b) {
+export function levensteinDistance(a, b) {
 	var m = [], i, j, min = Math.min;
 
 	if (!(a && b)) return (b || a).length;
@@ -52,7 +52,7 @@ function levensteinDistance(a, b) {
 	return m[b.length][a.length];
 }
 
-function scoreWindow(sw, query) {
+export function scoreWindow(sw, query) {
 	//debug('scoreWindow() - search: ' + JSON.stringify(sw) + ' ?= ' + JSON.stringify(query));
 	if (query.occupied !== undefined && sw.occupied != query.occupied) return 0;
 	let match_parts = 0;
@@ -74,7 +74,7 @@ function scoreWindow(sw, query) {
 	return score;
 }
 
-function findSavedWindow(saved_windows, wsh, query, threshold) {
+export function findSavedWindow(saved_windows, wsh, query, threshold) {
 	if (!saved_windows.hasOwnProperty(wsh)) {
 		//debug('findSavedWindow() - no such window section: ' + wsh)
 		return [undefined, undefined];
@@ -102,7 +102,7 @@ function findSavedWindow(saved_windows, wsh, query, threshold) {
 	return [found, best_score];
 }
 
-function findOverride(overrides, wsh, sw, threshold) {
+export function findOverride(overrides, wsh, sw, threshold) {
 	let override = {};
 	let matched = false;
 
@@ -131,7 +131,7 @@ function findOverride(overrides, wsh, sw, threshold) {
 	return override;
 }
 
-function matchedWindow(saved_windows, overrides, wsh, title, default_match_threshold) {
+export function matchedWindow(saved_windows, overrides, wsh, title, default_match_threshold) {
 	let o = findOverride(overrides, wsh, { title: title }, 1.0);
 
 	let threshold = default_match_threshold;

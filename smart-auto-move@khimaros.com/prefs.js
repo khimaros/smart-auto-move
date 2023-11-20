@@ -1,16 +1,17 @@
 'use strict';
 
-const GObject = imports.gi.GObject;
-const Gtk = imports.gi.Gtk;
-const Gio = imports.gi.Gio;
-const Pango = imports.gi.Pango;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Common = Me.imports.lib.common;
+import GObject from "gi://GObject";
+import Gtk from "gi://Gtk";
+import Gio from "gi://Gio";
+import GLib from "gi://GLib";
+import Pango from "gi://Pango";
 
-var TemplatesBox = GObject.registerClass({
+import { ExtensionPreferences } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
+import * as  Common from "./lib/common.js";
+
+const TemplatesBox = GObject.registerClass({
     GTypeName: 'templates',
-    Template: 'file://' + Me.path + '/ui/templates-gtk4.ui',
+    Template: 'file://' + GLib.uri_resolve_relative(import.meta.url, './ui/templates-gtk4.ui', GLib.UriFlags.NONE),
     InternalChildren: [
         'section-header-label',
         'override-template-listboxrow',
@@ -31,14 +32,28 @@ let settings;
 let changedOverridesSignal;
 let changedSavedWindowsSignal;
 
-function init() { }
+export default class SAMPreferences extends ExtensionPreferences {
+    fillPreferencesWindow(window) {
+        const widget = buildPrefsWidget(this);
+        const page = new Adw.PreferencesPage();
+        const group = new Adw.PreferencesGroup();
+        group.add(widget);
+        page.add(group);
+        window.add(page);
+    }
 
-function buildPrefsWidget() {
-    settings = ExtensionUtils.getSettings(Common.SETTINGS_SCHEMA);
+    get uiFile() {
+        return GLib.uri_resolve_relative(import.meta.url, './ui/prefs-gtk4.ui', GLib.UriFlags.NONE)
+    }
+  }
+
+
+function buildPrefsWidget(extension) {
+    settings = extension.getSettings();
 
     let builder = new Gtk.Builder();
 
-    builder.add_from_file(Me.path + '/ui/prefs-gtk4.ui');
+    builder.add_from_file(extension.uiFile);
 
     let root = builder.get_object('prefs-notebook');
 

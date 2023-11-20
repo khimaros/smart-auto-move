@@ -1,13 +1,11 @@
 'use strict';
 
 // imports
-const Main = imports.ui.main;
+import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
+import Meta from "gi://Meta";
+import * as Common from "./lib/common.js";
+
 const Mainloop = imports.mainloop;
-const St = imports.gi.St;
-const Meta = imports.gi.Meta;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const Common = Me.imports.lib.common;
 
 // settings backed state
 let debugLogging;
@@ -43,43 +41,48 @@ let changedIgnoreWorkspaceSignal;
 let changedOverridesSignal;
 let changedSavedWindowsSignal;
 
-//// EXTENSION LIFECYCLE
+//// EXTENSION CLASS
 
-function init() {
-	debug('init()');
-}
+export default class BedtimeMode extends Extension {
+	constructor(metadata) {
+		super(metadata);
 
-function enable() {
-	activeWindows = new Map();
+		debug('init()');
+	}
 
-	initializeSettings();
+	enable() {
+		activeWindows = new Map();
 
-	debug('enable()');
+		initializeSettings(this);
 
-	restoreSettings();
+		debug('enable()');
 
-	// maybe Meta.prefs_get_dynamic_workspaces()
-	// maybe Meta.prefs_set_num_workspaces() 
+		restoreSettings();
 
-	connectSignals();
-}
+		// maybe Meta.prefs_get_dynamic_workspaces()
+		// maybe Meta.prefs_set_num_workspaces()
 
-function disable() {
-	debug('disable()');
+		connectSignals();
+	}
 
-	disconnectSignals();
+	disable() {
+		debug('disable()');
 
-	saveSettings();
+		disconnectSignals();
 
-	cleanupSettings();
+		saveSettings();
 
-	activeWindows = null;
+		cleanupSettings();
+
+		activeWindows = null;
+	}
 }
 
 //// SETTINGS
 
-function initializeSettings() {
-	settings = ExtensionUtils.getSettings(Common.SETTINGS_SCHEMA);
+function initializeSettings(extension) {
+	settings = extension.getSettings();
+
 	debugLogging = Common.DEFAULT_DEBUG_LOGGING;
 	startupDelayMs = Common.DEFAULT_STARTUP_DELAY_MS;
 	syncFrequencyMs = Common.DEFAULT_SYNC_FREQUENCY_MS;
