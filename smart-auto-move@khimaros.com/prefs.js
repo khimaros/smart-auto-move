@@ -1,17 +1,18 @@
 'use strict';
 
 import GObject from "gi://GObject";
+import Adw from "gi://Adw";
 import Gtk from "gi://Gtk";
 import Gio from "gi://Gio";
 import GLib from "gi://GLib";
 import Pango from "gi://Pango";
 
 import { ExtensionPreferences } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
-import * as  Common from "./lib/common.js";
+import * as Common from "./lib/common.js";
 
 const TemplatesBox = GObject.registerClass({
     GTypeName: 'templates',
-    Template: 'file://' + GLib.uri_resolve_relative(import.meta.url, './ui/templates-gtk4.ui', GLib.UriFlags.NONE),
+    Template: GLib.path_get_dirname(import.meta.url) + '/ui/templates-gtk4.ui',
     InternalChildren: [
         'section-header-label',
         'override-template-listboxrow',
@@ -43,7 +44,7 @@ export default class SAMPreferences extends ExtensionPreferences {
     }
 
     get uiFile() {
-        return GLib.uri_resolve_relative(import.meta.url, './ui/prefs-gtk4.ui', GLib.UriFlags.NONE)
+        return `${this.path}/ui/prefs-gtk4.ui`;
     }
   }
 
