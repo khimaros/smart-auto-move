@@ -21,7 +21,7 @@ ui: smart-auto-move@khimaros.com/ui/prefs-gtk4.ui smart-auto-move@khimaros.com/u
 .PHONY: ui
 
 test:
-	gjs -I smart-auto-move@khimaros.com/lib/ ./smart-auto-move@khimaros.com/test/common.test.js
+	gjs -m -I smart-auto-move@khimaros.com/lib/ ./smart-auto-move@khimaros.com/test/common.test.js
 .PHONY: test
 
 log:
