@@ -1,6 +1,6 @@
 'use strict';
 
-const Common = imports.common;
+import * as Common from "../lib/common.js";
 
 function assertScore(sw, query, want_score) {
     let score = Common.scoreWindow(sw, query);
