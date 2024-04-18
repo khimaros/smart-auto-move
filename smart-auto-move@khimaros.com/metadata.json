@@ -7,5 +7,5 @@
   "settings-path": "/org/gnome/shell/extensions/smart-auto-move/",
   "original-author": "khimaros",
   "version": "21",
-  "shell-version": ["45", "46"]
+  "shell-version": ["45"]
 }
