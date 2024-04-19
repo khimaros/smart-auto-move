@@ -20,17 +20,13 @@ most settings can be modified via the extension preferences dialog.
 
 ### defaults
 
-the first step is to choose your **Default Synchronization Mode**: `IGNORE` or `RESTORE`.
+the first step is to choose your **Default Synchronization Mode**: `IGNORE` or `RESTORE`. `IGNORE` will keep track of windows but will not restore any unless an **Override** with `RESTORE` behavior is created. `RESTORE` will keep track and restore all windows unless an **Override** with `IGNORE` behavior is created.
 
-`IGNORE` will keep track of windows but will not restore any unless an **Override** is created.
+next is to choose your global **Match Threshold**, the default works well for most use cases. a number closer to `0.0` will match windows with less similar attributes, whereas `1.0` requires an exact match.
 
-`RESTORE` will keep track and restore all windows unless an **Override** is created.
+advanced users can also tune extension resource usage. adjust **Sync Frequency** (memory and CPU) and **Save Frequency** (disk I/O).
 
-default **Match Threshold** is probably fine to keep as is.
-
-if you'd like to optimize resource usage, you can change **Sync Frequency** and **Save Frequency**.
-
-once you are happy with your setup, you can **Freeze Saves** to prevent any changes to your saved windows. note, however, that this will pvevent windows from being tracked when their titles change.
+after you've dialed in your overrides, the learning apparatus can be paused. enable **Freeze Saves** to prevent changes to Saved Windows. N.B. this lose track of windows if their titles change.
 
 ### overrides
 
@@ -44,17 +40,25 @@ after you've created an override, visit the **Overrides** tab.
 
 you can change the IGNORE/RESTORE behavior here for apps and windows.
 
-for apps, you can also control the Match Threshold.
-
-if you have an app which needs looser matching (eg. if the title changes between restarts) reduce the threshold.
-
-for tighter matching, increase it.
+for applications, a custom **Match Threshold** can be set.
 
 ## limitations
 
-terminals which include the current directory in the title may not reach the match threshold when restarted if they do not preserve the working directory across restarts.
+LIMITATION: terminals which include the current directory in the title may not reach the match threshold if they do not preserve the working directory across restarts. WORKAROUND: create a per-app override (see above) and set the threshold to a lower value, eg. `0.2`
 
-to work around this, create a per-app override (see above) and set the threshold to a lower value, eg. `0.2`
+LIMITATION: multi-monitor is not well supported and may result in windows becoming "stuck". WORKAROUND: visit the "Saved Windows" tab in preferences and delete any stuck windows.
+
+## troubleshooting
+
+if everything is horribly broken, clear your Saved Windows:
+
+```
+$ gnome-extensions disable smart-auto-move@khimaros.com
+
+$ dconf write /org/gnome/shell/extensions/smart-auto-move/saved-windows '{}'
+
+$ gnome-extensions enable smart-auto-move@khimaros.com
+```
 
 ## behavior
 
@@ -85,7 +89,7 @@ $ dconf write /org/gnome/shell/extensions/smart-auto-move/sync-frequency 50
 ```
 
 default to ignoring windows unless explicitly defined. restore all windows of the gnome-calculator app, all firefox windows except for the profile chooser, and Nautilus only if the window title is "Downloads":
-
+/
 ```
 $ dconf write /org/gnome/shell/extensions/smart-auto-move/sync-mode "'IGNORE'"
 $ dconf write /org/gnome/shell/extensions/smart-auto-move/overrides '{"gnome-calculator": [{"action":1}], "firefox": [{"query": {"title": "Firefox - Choose User Profile"}, "action": 0}, {"action": 1}],"org.gnome.Nautilus":[{"query":{"title":"Downloads"},"action":1}]}'
@@ -121,76 +125,3 @@ the gsettings tool can also be used to manipulate these values:
 ```
 $ gsettings --schemadir ./smart-auto-move@khimaros.com/schemas/ set org.gnome.shell.extensions.smart-auto-move sync-mode 'RESTORE'
 ```
-
-## development
-
-NOTE: this process has only been tested with GNOME running on wayland.
-
-clone this repository and run `make start`.
-
-this will do the following:
-
-- build the extension pack .zip
-- install the extension pack
-- launch a nested wayland Gnome-Shell session
-
-after the nested instance is running, you will need to enable the extension:
-
-```
-$ gnome-extensions enable smart-auto-move@khimaros.com
-```
-
-if you make a change to the source code, you will need to exit the session and start a new one.
-
-### adding new preferences
-
-see commit 9edd9e3210a1541d5c2915943c7a2b238ce7a856 for an end-to-end example.
-
-## publishing
-
-1. update `metadata.json` to latest uploaded version + 1
-1. generate the extension zip with `make`
-1. upload the zip to extensions.gnome.org
-1. repeat as needed if a version is rejected
-
-## manual tests
-
-### calculator
-
-- open calculator
-- move calculator position
-- resize calculator
-- close calculator
-- open calculator
-- quickly close calculator
-- open calculator
-
-### files
-
-- open Places => Home
-- open a second Places => Home
-- tile first window to the left
-- move second Home window
-- close first Home window
-- change second Home window to Downloads
-- close Downloads window
-- open Places -> Downloads
-- open Places -> Home
-- move Downloads to workspace 2
-- tile Downloads to the right
-
-### firefox
-
-- launch firefox
-- navigate to Wikipedia.org
-- open second window
-- navigate to Mozilla.org
-- move first window to workspace 2
-- tile first window to left
-- tile second window to right
-- firefox Menu -> Quit
-- launch firefox
-- open new tab in Mozilla window
-- navigate to Google.com
-- firefox Menu -> Quit
-- launch firefox
