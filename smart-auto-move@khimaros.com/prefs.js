@@ -28,8 +28,6 @@ const TemplatesBox = GObject.registerClass({
     ],
 }, class TemplatesBox extends Gtk.Box { });
 
-let settings;
-
 let changedOverridesSignal;
 let changedSavedWindowsSignal;
 
@@ -50,7 +48,7 @@ export default class SAMPreferences extends ExtensionPreferences {
 
 
 function buildPrefsWidget(extension) {
-    settings = extension.getSettings();
+    let settings = extension.getSettings();
 
     let builder = new Gtk.Builder();
 
@@ -115,7 +113,7 @@ function buildPrefsWidget(extension) {
         'active',
         Gio.SettingsBindFlags.DEFAULT
     );
-    
+
     let ignore_position_widget = builder.get_object('ignore-position-switch');
     settings.bind(
         Common.SETTINGS_KEY_IGNORE_POSITION,
@@ -123,7 +121,7 @@ function buildPrefsWidget(extension) {
         'active',
         Gio.SettingsBindFlags.DEFAULT
     );
-    
+
     let ignore_workspace_widget = builder.get_object('ignore-workspace-switch');
     settings.bind(
         Common.SETTINGS_KEY_IGNORE_WORKSPACE,
@@ -154,8 +152,10 @@ function buildPrefsWidget(extension) {
 }
 
 function loadOverridesSetting(list_widget, list_objects) {
+    let settings = extension.getSettings();
+
     let overrides = JSON.parse(settings.get_string(Common.SETTINGS_KEY_OVERRIDES));
-    
+
     // TODO: deduplicate this with similar logic in loadSavedWindowsSetting()
     let current_row = list_widget.get_first_child();
     current_row = current_row.get_next_sibling(); // skip the first row
@@ -202,7 +202,7 @@ function loadOverridesSetting(list_widget, list_objects) {
             let threshold_signal = threshold_widget.connect('value-changed', function (spin) {
                 let threshold = spin.get_value();
                 if (threshold <= 0.01) threshold = undefined;
-                //log('SPIN THRESHOLD CHANGED: ' + threshold);
+                //console.log('SPIN THRESHOLD CHANGED: ' + threshold);
                 wshos[oi].threshold = threshold;
                 settings.set_string(Common.SETTINGS_KEY_OVERRIDES, JSON.stringify(overrides));
             });
@@ -213,14 +213,14 @@ function loadOverridesSetting(list_widget, list_objects) {
             let action_signal = action_widget.connect('changed', function (combo) {
                 let action = combo.get_active();
                 if (action === 2) action = undefined;
-                //log('COMBO CHANGED ACTIVE: ' + combo.get_active());
+                //console.log('COMBO CHANGED ACTIVE: ' + combo.get_active());
                 wshos[oi].action = action;
                 settings.set_string(Common.SETTINGS_KEY_OVERRIDES, JSON.stringify(overrides));
             });
 
             let delete_widget = row_templates._override_delete_button;
             let delete_signal = delete_widget.connect('clicked', function () {
-                //log('DELETE OVERRIDE: ' + JSON.stringify(o));
+                //console.log('DELETE OVERRIDE: ' + JSON.stringify(o));
                 wshos.splice(oi, 1);
                 if (wshos.length < 1) delete (overrides[wsh]);
                 settings.set_string(Common.SETTINGS_KEY_OVERRIDES, JSON.stringify(overrides));
@@ -238,6 +238,8 @@ function loadOverridesSetting(list_widget, list_objects) {
 }
 
 function loadSavedWindowsSetting(list_widget, list_objects) {
+    let settings = extension.getSettings();
+
     let saved_windows = JSON.parse(settings.get_string(Common.SETTINGS_KEY_SAVED_WINDOWS));
 
     let current_row = list_widget.get_first_child();
@@ -271,7 +273,7 @@ function loadSavedWindowsSetting(list_widget, list_objects) {
 
             let delete_widget = row_templates._saved_window_delete_button;
             let delete_signal = delete_widget.connect('clicked', function () {
-                //log('DELETE SAVED WINDOW: ' + JSON.stringify(sw));
+                //console.log('DELETE SAVED WINDOW: ' + JSON.stringify(sw));
                 sws.splice(swi, 1);
                 if (sws.length < 1) delete (saved_windows[wsh]);
                 settings.set_string(Common.SETTINGS_KEY_SAVED_WINDOWS, JSON.stringify(saved_windows));
@@ -280,7 +282,7 @@ function loadSavedWindowsSetting(list_widget, list_objects) {
             let ignore_widget = row_templates._saved_window_ignore_button;
             let ignore_signal = ignore_widget.connect('clicked', function () {
                 let o = { query: { title: sw.title }, action: 0 };
-                //log('ADD OVERRIDE: ' + wsh + ' ' + o);
+                //console.log('ADD OVERRIDE: ' + wsh + ' ' + o);
                 let overrides = JSON.parse(settings.get_string(Common.SETTINGS_KEY_OVERRIDES));
                 if (!overrides.hasOwnProperty(wsh))
                     overrides[wsh] = new Array();
@@ -291,7 +293,7 @@ function loadSavedWindowsSetting(list_widget, list_objects) {
             let ignore_any_widget = row_templates._saved_window_ignore_any_button;
             let ignore_any_signal = ignore_any_widget.connect('clicked', function () {
                 let o = { action: 0, threshold: settings.get_double(Common.SETTINGS_KEY_MATCH_THRESHOLD) };
-                //log('ADD OVERRIDE: ' + wsh + ' ' + o);
+                //console.log('ADD OVERRIDE: ' + wsh + ' ' + o);
                 let overrides = JSON.parse(settings.get_string(Common.SETTINGS_KEY_OVERRIDES));
                 if (!overrides.hasOwnProperty(wsh))
                     overrides[wsh] = new Array();

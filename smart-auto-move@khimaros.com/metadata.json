@@ -4,7 +4,6 @@
   "url": "https://github.com/khimaros/smart-auto-move",
   "description": "Smart Auto Move learns the size and position of your application windows and restores them to the correct place on subsequent launches. Supports Wayland.\n\nNOTE: Optimized for use with static workspaces. For more control, can be set to default IGNORE and then selectively RESTORE only desired apps.",
   "settings-schema": "org.gnome.shell.extensions.smart-auto-move",
-  "settings-path": "/org/gnome/shell/extensions/smart-auto-move/",
   "original-author": "khimaros",
   "version": "21",
   "shell-version": ["45"]

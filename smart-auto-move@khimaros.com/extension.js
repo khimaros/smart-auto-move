@@ -3,9 +3,8 @@
 // imports
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 import Meta from "gi://Meta";
+import GLib from "gi://GLib";
 import * as Common from "./lib/common.js";
-
-const Mainloop = imports.mainloop;
 
 // settings backed state
 let debugLogging;
@@ -390,19 +389,25 @@ function syncWindows() {
 
 function handleTimeoutSave() {
 	//debug('handleTimeoutSave(): ' + JSON.stringify(savedWindows));
+	GLib.Source.remove(timeoutSaveSignal);
+	timeoutSaveSignal = null;
 	saveSettings();
-	timeoutSaveSignal = Mainloop.timeout_add(saveFrequencyMs, handleTimeoutSave);
+	timeoutSaveSignal = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, saveFrequencyMs, handleTimeoutSave);
+	return GLib.SOURCE_CONTINUE;
 }
 
 function handleTimeoutSync() {
 	//debug('handleTimeoutSync()');
+	GLib.Source.remove(timeoutSyncSignal);
+	timeoutSyncSignal = null;
 	syncWindows();
-	timeoutSyncSignal = Mainloop.timeout_add(syncFrequencyMs, handleTimeoutSync);
+	timeoutSyncSignal = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, syncFrequencyMs, handleTimeoutSync);
+	return GLib.SOURCE_CONTINUE;
 }
 
 function handleChangedDebugLogging() {
 	debugLogging = settings.get_boolean(Common.SETTINGS_KEY_DEBUG_LOGGING);
-	log('[smart-auto-move] handleChangedDebugLogging(): ' + debugLogging);
+	console.log('[smart-auto-move] handleChangedDebugLogging(): ' + debugLogging);
 }
 
 function handleChangedStartupDelay() {
@@ -474,15 +479,17 @@ function disconnectSignals() {
 }
 
 function addTimeouts() {
-	timeoutSyncSignal = Mainloop.timeout_add(syncFrequencyMs, handleTimeoutSync);
-	timeoutSaveSignal = Mainloop.timeout_add(saveFrequencyMs, handleTimeoutSave);
+	timeoutSyncSignal = GLib.timeout_add_seconds(
+		GLib.PRIORITY_DEFAULT, syncFrequencyMs, handleTimeoutSync);
+	timeoutSaveSignal = GLib.timeout_add_seconds(
+		GLib.PRIORITY_DEFAULT, saveFrequencyMs, handleTimeoutSave);
 }
 
 function removeTimeouts() {
-	Mainloop.source_remove(timeoutSyncSignal);
+	GLib.Source.remove(timeoutSyncSignal);
 	timeoutSyncSignal = null;
 
-	Mainloop.source_remove(timeoutSaveSignal);
+	GLib.Source.remove(timeoutSaveSignal);
 	timeoutSaveSignal = null;
 }
 
@@ -525,7 +532,7 @@ function disconnectSettingChangedSignals() {
 
 function debug(message) {
 	if (debugLogging) {
-		log('[smart-auto-move] ' + message);
+		console.log('[smart-auto-move] ' + message);
 	}
 }
 
