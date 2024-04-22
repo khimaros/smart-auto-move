@@ -134,8 +134,10 @@ function buildPrefsWidget(extension) {
 
     let saved_windows_list_widget = builder.get_object('saved-windows-listbox');
     let saved_windows_list_objects = [];
-    loadSavedWindowsSetting(saved_windows_list_widget, saved_windows_list_objects);
-    changedSavedWindowsSignal = settings.connect('changed::' + Common.SETTINGS_KEY_SAVED_WINDOWS, function () { loadSavedWindowsSetting(saved_windows_list_widget, saved_windows_list_objects); });
+    loadSavedWindowsSetting(extension, saved_windows_list_widget, saved_windows_list_objects);
+    changedSavedWindowsSignal = settings.connect('changed::' + Common.SETTINGS_KEY_SAVED_WINDOWS, function () {
+	    loadSavedWindowsSetting(extension, saved_windows_list_widget, saved_windows_list_objects);
+    });
 
     /// OVERRIDES
 
@@ -145,13 +147,15 @@ function buildPrefsWidget(extension) {
     overrides_add_application_widget.connect('clicked', function () {
         // TODO
     });
-    loadOverridesSetting(overrides_list_widget, overrides_list_objects);
-    changedOverridesSignal = settings.connect('changed::' + Common.SETTINGS_KEY_OVERRIDES, function () { loadOverridesSetting(overrides_list_widget, overrides_list_objects); });
+    loadOverridesSetting(extension, overrides_list_widget, overrides_list_objects);
+    changedOverridesSignal = settings.connect('changed::' + Common.SETTINGS_KEY_OVERRIDES, function () {
+	    loadOverridesSetting(extension, overrides_list_widget, overrides_list_objects);
+    });
 
     return root;
 }
 
-function loadOverridesSetting(list_widget, list_objects) {
+function loadOverridesSetting(extension, list_widget, list_objects) {
     let settings = extension.getSettings();
 
     let overrides = JSON.parse(settings.get_string(Common.SETTINGS_KEY_OVERRIDES));
@@ -237,7 +241,7 @@ function loadOverridesSetting(list_widget, list_objects) {
     });
 }
 
-function loadSavedWindowsSetting(list_widget, list_objects) {
+function loadSavedWindowsSetting(extension, list_widget, list_objects) {
     let settings = extension.getSettings();
 
     let saved_windows = JSON.parse(settings.get_string(Common.SETTINGS_KEY_SAVED_WINDOWS));

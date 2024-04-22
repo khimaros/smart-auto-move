@@ -392,7 +392,7 @@ function handleTimeoutSave() {
 	GLib.Source.remove(timeoutSaveSignal);
 	timeoutSaveSignal = null;
 	saveSettings();
-	timeoutSaveSignal = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, saveFrequencyMs, handleTimeoutSave);
+	timeoutSaveSignal = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, saveFrequencyMs / 1000.0, handleTimeoutSave);
 	return GLib.SOURCE_CONTINUE;
 }
 
@@ -401,7 +401,7 @@ function handleTimeoutSync() {
 	GLib.Source.remove(timeoutSyncSignal);
 	timeoutSyncSignal = null;
 	syncWindows();
-	timeoutSyncSignal = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, syncFrequencyMs, handleTimeoutSync);
+	timeoutSyncSignal = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, syncFrequencyMs / 1000.0, handleTimeoutSync);
 	return GLib.SOURCE_CONTINUE;
 }
 
@@ -480,9 +480,9 @@ function disconnectSignals() {
 
 function addTimeouts() {
 	timeoutSyncSignal = GLib.timeout_add_seconds(
-		GLib.PRIORITY_DEFAULT, syncFrequencyMs, handleTimeoutSync);
+		GLib.PRIORITY_DEFAULT, syncFrequencyMs / 1000.0, handleTimeoutSync);
 	timeoutSaveSignal = GLib.timeout_add_seconds(
-		GLib.PRIORITY_DEFAULT, saveFrequencyMs, handleTimeoutSave);
+		GLib.PRIORITY_DEFAULT, saveFrequencyMs / 1000.0, handleTimeoutSave);
 }
 
 function removeTimeouts() {
