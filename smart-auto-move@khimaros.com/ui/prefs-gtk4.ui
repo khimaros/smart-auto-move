@@ -217,7 +217,7 @@
                     </child>
                     <child>
                       <object class="GtkLabel">
-                        <property name="tooltip-text" translatable="1">Do not restore windows' position.</property>
+                        <property name="tooltip-text" translatable="1">Do not restore windows&apos; position.</property>
                         <property name="halign">start</property>
                         <property name="hexpand">1</property>
                         <property name="label" translatable="1">Ignore Position</property>
@@ -240,7 +240,7 @@
                     </child>
                     <child>
                       <object class="GtkLabel">
-                        <property name="tooltip-text" translatable="1">Do not restore windows' workspace.</property>
+                        <property name="tooltip-text" translatable="1">Do not restore windows&apos; workspace.</property>
                         <property name="halign">start</property>
                         <property name="hexpand">1</property>
                         <property name="label" translatable="1">Ignore Workspace</property>
@@ -260,6 +260,27 @@
                           <property name="row">8</property>
                         </layout>
                       </object>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
                     </child>
                     <child>
                       <placeholder/>
@@ -307,6 +328,23 @@
                     <property name="vexpand">1</property>
                     <property name="selection-mode">none</property>
                     <property name="activate-on-single-click">0</property>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="focusable">1</property>
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="homogeneous">1</property>
+                            <child>
+                              <object class="GtkButton" id="saved-windows-cleanup-button">
+                                <property name="label" translatable="1">Cleanup Non-occupied Windows</property>
+                                <property name="focusable">1</property>
+                                <property name="receives-default">1</property>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
                   </object>
                 </property>
               </object>

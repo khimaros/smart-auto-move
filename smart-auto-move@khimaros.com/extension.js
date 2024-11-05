@@ -528,9 +528,13 @@ function disconnectSettingChangedSignals() {
 
 //// DEBUG UTILITIES
 
+function info(message) {
+	console.log('[smart-auto-move] ' + message);
+}
+
 function debug(message) {
 	if (debugLogging) {
-		console.log('[smart-auto-move] ' + message);
+		info(message);
 	}
 }
 

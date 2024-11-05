@@ -25,7 +25,7 @@ test:
 .PHONY: test
 
 log:
-	journalctl -f /usr/bin/gnome-shell
+	journalctl -f /usr/bin/gnome-shell /usr/bin/gjs
 .PHONY: log
 
 install: smart-auto-move@khimaros.com.shell-extension.zip

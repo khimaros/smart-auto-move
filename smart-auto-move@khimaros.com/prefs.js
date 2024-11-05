@@ -134,6 +134,11 @@ function buildPrefsWidget(extension) {
 
     let saved_windows_list_widget = builder.get_object('saved-windows-listbox');
     let saved_windows_list_objects = [];
+    let saved_windows_cleanup_widget = builder.get_object('saved-windows-cleanup-button');
+    saved_windows_cleanup_widget.connect('clicked', function () {
+	//console.log('CLEANUP BUTTON CLICKED');
+        deleteNonOccupiedWindows(extension);
+    });
     loadSavedWindowsSetting(extension, saved_windows_list_widget, saved_windows_list_objects);
     changedSavedWindowsSignal = settings.connect('changed::' + Common.SETTINGS_KEY_SAVED_WINDOWS, function () {
 	    loadSavedWindowsSetting(extension, saved_windows_list_widget, saved_windows_list_objects);
@@ -241,12 +246,31 @@ function loadOverridesSetting(extension, list_widget, list_objects) {
     });
 }
 
+function deleteNonOccupiedWindows(extension) {
+    let settings = extension.getSettings();
+
+    let saved_windows = JSON.parse(settings.get_string(Common.SETTINGS_KEY_SAVED_WINDOWS));
+
+    Object.keys(saved_windows).forEach(function (wsh) {
+            let sws = saved_windows[wsh];
+            sws.forEach(function (sw, swi) {
+                    if (!sw.occupied) {
+                            sws.splice(swi, 1);
+                            if (sws.length < 1) delete (saved_windows[wsh]);
+                    }
+            });
+    });
+
+    settings.set_string(Common.SETTINGS_KEY_SAVED_WINDOWS, JSON.stringify(saved_windows));
+}
+
 function loadSavedWindowsSetting(extension, list_widget, list_objects) {
     let settings = extension.getSettings();
 
     let saved_windows = JSON.parse(settings.get_string(Common.SETTINGS_KEY_SAVED_WINDOWS));
 
     let current_row = list_widget.get_first_child();
+    current_row = current_row.get_next_sibling(); // skip the first row
     while (current_row !== null) {
         let prev_row = current_row;
         current_row = current_row.get_next_sibling();
