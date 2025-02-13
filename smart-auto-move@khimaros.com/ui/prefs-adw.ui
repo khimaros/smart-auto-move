@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface domain="smartautomove">
+  <object class="AdwPreferencesPage" id="smartautomove_page1">
+    <property name="name">smartautomove_page1</property>
+    <property name="title" translatable="yes">General</property>
+    <property name="icon-name">preferences-system-symbolic</property>
+    <child>
+      <object class="AdwPreferencesGroup" id="smartautomove_group1">
+        <property name="title" translatable="yes">Settings</property>
+        <child>
+          <object class="AdwSwitchRow" id="debug-logging-switch">
+            <property name="title" translatable="yes">Debug Logging</property>
+            <property name="subtitle" translatable="yes">Write detailed logs about extension behavior.</property>
+            <property name="tooltip-text" translatable="yes">Write detailed logs about extension behavior.</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwComboRow" id="sync-mode-combo">
+            <property name="title" translatable="yes">Default Synchronization Mode</property>
+            <property name="subtitle" translatable="yes">Default mode when synchronizing windows.</property>
+            <property name="tooltip-text" translatable="yes">Default mode when synchronizing windows.</property>
+              <property name="model">
+                <object class="GtkStringList">
+                  <items>
+                    <item translatable="yes">IGNORE</item>
+                    <item translatable="yes">RESTORE</item>
+                  </items>
+                </object>
+              </property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSpinRow" id="match-threshold-spin">
+            <property name="title" translatable="yes">Match Threshold</property>
+            <property name="subtitle" translatable="1">Minimum threshold for matching restored windows.</property>
+            <property name="tooltip-text" translatable="1">Minimum threshold for matching restored windows.</property>
+            <property name="adjustment">
+              <object class="GtkAdjustment">
+                <property name="lower">0</property>
+                <property name="upper">1</property>
+                <property name="value">0.7</property>
+                <property name="page-increment">0</property>
+                <property name="step-increment">0.05</property>
+              </object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSpinRow" id="sync-frequency-spin">
+            <property name="title" translatable="yes">Sync Frequency (milliseconds)</property>
+            <property name="subtitle" translatable="1">Frequency in milliseconds to synchronize changes to active windows into the in-memory store.</property>
+            <property name="tooltip-text" translatable="1">Frequency in milliseconds to synchronize changes to active windows into the in-memory store.</property>
+            <property name="adjustment">
+              <object class="GtkAdjustment">
+                <property name="lower">50</property>
+                <property name="upper">5000</property>
+                <property name="value">100</property>
+                <property name="step-increment">10</property>
+                <property name="page-increment">100</property>
+              </object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSpinRow" id="save-frequency-spin">
+            <property name="title" translatable="yes">Save Frequency (milliseconds)</property>
+            <property name="subtitle" translatable="1">Frequency in milliseconds to persist the in-memory store to disk.</property>
+            <property name="tooltip-text" translatable="1">Frequency in milliseconds to persist the in-memory store to disk.</property>
+            <property name="adjustment">
+              <object class="GtkAdjustment">
+                <property name="lower">200</property>
+                <property name="upper">10000</property>
+                <property name="value">1000</property>
+                <property name="step-increment">50</property>
+                <property name="page-increment">1000</property>
+              </object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSwitchRow" id="freeze-saves-switch">
+            <property name="title" translatable="yes">Freeze Saves</property>
+            <property name="subtitle" translatable="1">Do not update saved window data.</property>
+            <property name="tooltip-text" translatable="1">Do not update saved window data.</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSwitchRow" id="activate-workspace-switch">
+            <property name="title" translatable="yes">Activate Workspace</property>
+            <property name="subtitle" translatable="1">Follow apps when they are moved to another workspace.</property>
+            <property name="tooltip-text" translatable="1">Follow apps when they are moved to another workspace.</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSwitchRow" id="ignore-position-switch">
+            <property name="title" translatable="yes">Ignore Position</property>
+            <property name="subtitle" translatable="1">Do not restore windows&apos; position.</property>
+            <property name="tooltip-text" translatable="1">Do not restore windows&apos; position.</property>
+          </object>
+        </child>
+        <child>
+          <object class="AdwSwitchRow" id="ignore-workspace-switch">
+            <property name="title" translatable="yes">Ignore Workspace</property>
+            <property name="subtitle" translatable="1">Do not restore windows&apos; workspace.</property>
+            <property name="tooltip-text" translatable="1">Do not restore windows&apos; workspace.</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="AdwPreferencesPage" id="smartautomove_page2">
+      <property name="name">smartautomove_page2</property>
+      <property name="title" translatable="yes">Saved Windows</property>
+      <property name="icon-name">window-restore-symbolic</property>
+      <child>
+        <object class="AdwPreferencesGroup" id="saved-windows-listbox">
+          <property name="title" translatable="yes"></property>
+          <child>
+          <object class="AdwButtonRow" id="saved-windows-cleanup-button">
+            <property name="title" translatable="yes">Cleanup Non-occupied Windows</property>
+          </object>
+        </child>
+        </object>
+      </child>
+  </object>
+  <object class="AdwPreferencesPage" id="smartautomove_page3">
+      <property name="name">smartautomove_page3</property>
+      <property name="title" translatable="yes">Overrides</property>
+      <property name="icon-name">dialog-warning-symbolic</property>
+      <child>
+        <object class="AdwPreferencesGroup" id="overrides-listbox">
+          <property name="title" translatable="yes"></property>
+          <child>
+          <object class="AdwActionRow" id="smartautomove_p3row1">
+            <property name="title" translatable="yes"></property>
+            <child>
+              <object class="GtkButton" id="overrides-add-application-button">
+                <property name="label" translatable="yes">Add Application</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="overrides-add-window-button">
+                <property name="label" translatable="1">Choose Window</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        </object>
+      </child>
+  </object>
+</interface>
