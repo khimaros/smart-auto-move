@@ -33,8 +33,10 @@ export default class SAMPreferences extends ExtensionPreferences {
     savefrequencyspin.set_numeric(true);
 
     this._general(this.getSettings(), builder);
-    this._savedwindows(this.getSettings(), builder);
-    this._overrides(this.getSettings(), builder);
+    const savedwindowsRows = [];
+    this._savedwindows(this.getSettings(), builder, savedwindowsRows);
+    const overridesRows = [];
+    this._overrides(this.getSettings(), builder, overridesRows);
   }
 
   _general(settings, builder) {
@@ -76,7 +78,7 @@ export default class SAMPreferences extends ExtensionPreferences {
     });
   }
 
-  _savedwindows(settings, builder) {
+  _savedwindows(settings, builder, list_rows) {
     const saved_windows_list_widget = builder.get_object(
       "saved-windows-listbox"
     );
@@ -90,7 +92,8 @@ export default class SAMPreferences extends ExtensionPreferences {
     this._loadSavedWindowsSetting(
       settings,
       saved_windows_list_widget,
-      saved_windows_list_objects
+      saved_windows_list_objects,
+      list_rows
     );
     this.changedSavedWindowsSignal = settings.connect(
       "changed::" + Common.SETTINGS_KEY_SAVED_WINDOWS,
@@ -98,13 +101,14 @@ export default class SAMPreferences extends ExtensionPreferences {
         this._loadSavedWindowsSetting(
           settings,
           saved_windows_list_widget,
-          saved_windows_list_objects
+          saved_windows_list_objects,
+          list_rows
         );
       }
     );
   }
 
-  _overrides(settings, builder) {
+  _overrides(settings, builder, list_rows) {
     const overrides_list_objects = [];
     const overrides_list_widget = builder.get_object("overrides-listbox");
     const overrides_add_application_widget = builder.get_object(
@@ -116,7 +120,8 @@ export default class SAMPreferences extends ExtensionPreferences {
     this._loadOverridesSetting(
       settings,
       overrides_list_widget,
-      overrides_list_objects
+      overrides_list_objects,
+      list_rows
     );
     this.changedOverridesSignal = settings.connect(
       "changed::" + Common.SETTINGS_KEY_OVERRIDES,
@@ -124,37 +129,35 @@ export default class SAMPreferences extends ExtensionPreferences {
         this._loadOverridesSetting(
           settings,
           overrides_list_widget,
-          overrides_list_objects
+          overrides_list_objects,
+          list_rows
         );
       }
     );
   }
 
-  _clearListWidget(list_widget, list_objects) {
-    let current_row = list_widget.get_first_child();
-    current_row = current_row.get_next_sibling(); // skip the first row
-    while (current_row !== null) {
-      let prev_row = current_row;
-      current_row = current_row.get_next_sibling();
-
+  _clearListWidget(list_widget, list_objects, list_rows) {
+    if (list_rows.length < 1) return;
+    list_rows.forEach((element) => {
+      list_widget.remove(element);
       let lo = list_objects.shift();
       if (lo !== null) {
         Object.values(lo).forEach(([signal, widget]) => {
           widget.disconnect(signal);
         });
       }
-
-      list_widget.remove(prev_row);
-    }
+    });
+    list_rows.splice(0, list_rows.length);
   }
 
-  _loadOverridesSetting(settings, list_widget, list_objects) {
+  _loadOverridesSetting(settings, list_widget, list_objects, list_rows) {
     const overrides = JSON.parse(
       settings.get_string(Common.SETTINGS_KEY_OVERRIDES)
     );
-    this._clearListWidget(list_widget, list_objects);
+    this._clearListWidget(list_widget, list_objects, list_rows);
     Object.keys(overrides).forEach((wsh) => {
       const adwexprow = new Adw.ExpanderRow();
+      list_rows.push(adwexprow);
       adwexprow.set_title(wsh);
       adwexprow.set_expanded(true);
       list_widget.add(adwexprow);
@@ -191,9 +194,9 @@ export default class SAMPreferences extends ExtensionPreferences {
         );
 
         const action_widget = new Gtk.ComboBoxText();
-        action_widget.append_text(_("IGNORE"), "IGNORE");
-        action_widget.append_text(_("RESTORE"), "RESTORE");
-        action_widget.append_text(_("DEFAULT"), "DEFAULT");
+        action_widget.append_text(_("IGNORE"));
+        action_widget.append_text(_("RESTORE"));
+        action_widget.append_text(_("DEFAULT"));
         action_widget.set_valign(Gtk.Align.CENTER);
         row.add_suffix(action_widget);
         if (o.action !== undefined) action_widget.set_active(o.action);
@@ -256,16 +259,17 @@ export default class SAMPreferences extends ExtensionPreferences {
     );
   }
 
-  _loadSavedWindowsSetting(settings, list_widget, list_objects) {
+  _loadSavedWindowsSetting(settings, list_widget, list_objects, list_rows) {
     const saved_windows = JSON.parse(
       settings.get_string(Common.SETTINGS_KEY_SAVED_WINDOWS)
     );
-    this._clearListWidget(list_widget, list_objects);
+    this._clearListWidget(list_widget, list_objects, list_rows);
     Object.keys(saved_windows).forEach((wsh) => {
       let sws = saved_windows[wsh];
       sws.forEach((sw, swi) => {
         const row = new Adw.ActionRow();
-        row.set_title(wsh);
+        list_rows.push(row);
+        row.set_title(wsh + " - " + sw.title);
         row.set_tooltip_text(wsh + " - " + sw.title);
         if (!sw.occupied) row.set_subtitle(_("Not occupied"));
         const delete_widget = new Gtk.Button({

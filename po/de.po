@@ -231,11 +231,3 @@ msgstr "Position ignorieren"
 msgid "Ignore workspace"
 msgstr "Arbeitsbereich ignorieren"
 
-#~ msgid "Email"
-#~ msgstr "E-Mail"
-
-#~ msgid "Name of .desktop files without .desktop ending"
-#~ msgstr "Name der .desktop-Dateien ohne .desktop-Endung"
-
-#~ msgid "Chat"
-#~ msgstr "Chat"
