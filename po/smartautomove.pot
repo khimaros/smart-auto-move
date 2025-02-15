@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-14 19:45+0100\n"
+"POT-Creation-Date: 2025-02-15 08:02+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -40,8 +40,8 @@ msgstr ""
 msgid "DEFAULT"
 msgstr ""
 
-#: smart-auto-move@khimaros.com/prefs.js:212
-#: smart-auto-move@khimaros.com/prefs.js:270
+#: smart-auto-move@khimaros.com/prefs.js:214
+#: smart-auto-move@khimaros.com/prefs.js:272
 msgid "Delete"
 msgstr ""
 
@@ -49,11 +49,11 @@ msgstr ""
 msgid "Not occupied"
 msgstr ""
 
-#: smart-auto-move@khimaros.com/prefs.js:284
+#: smart-auto-move@khimaros.com/prefs.js:288
 msgid "OVERRIDE"
 msgstr ""
 
-#: smart-auto-move@khimaros.com/prefs.js:302
+#: smart-auto-move@khimaros.com/prefs.js:306
 msgid "OVERRIDE (ANY)"
 msgstr ""
 
@@ -91,12 +91,32 @@ msgstr ""
 msgid "Match Threshold"
 msgstr ""
 
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:35
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:36
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:35
+msgid "Minimum threshold for matching restored windows."
+msgstr ""
+
 #: smart-auto-move@khimaros.com/ui/prefs-adw.ui:50
 msgid "Sync Frequency (milliseconds)"
 msgstr ""
 
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:51
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:52
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:25
+msgid ""
+"Frequency in milliseconds to synchronize changes to active windows into the "
+"in-memory store."
+msgstr ""
+
 #: smart-auto-move@khimaros.com/ui/prefs-adw.ui:66
 msgid "Save Frequency (milliseconds)"
+msgstr ""
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:67
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:68
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:30
+msgid "Frequency in milliseconds to persist the in-memory store to disk."
 msgstr ""
 
 #: smart-auto-move@khimaros.com/ui/prefs-adw.ui:82
@@ -104,17 +124,41 @@ msgstr ""
 msgid "Freeze Saves"
 msgstr ""
 
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:83
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:84
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:50
+msgid "Do not update saved window data."
+msgstr ""
+
 #: smart-auto-move@khimaros.com/ui/prefs-adw.ui:89
 #: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:54
 msgid "Activate Workspace"
+msgstr ""
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:90
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:91
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:55
+msgid "Follow apps when they are moved to another workspace."
 msgstr ""
 
 #: smart-auto-move@khimaros.com/ui/prefs-adw.ui:96
 msgid "Ignore Position"
 msgstr ""
 
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:97
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:98
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:60
+msgid "Do not restore windows' position."
+msgstr ""
+
 #: smart-auto-move@khimaros.com/ui/prefs-adw.ui:103
 msgid "Ignore Workspace"
+msgstr ""
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:104
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:105
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:65
+msgid "Do not restore windows' workspace."
 msgstr ""
 
 #: smart-auto-move@khimaros.com/ui/prefs-adw.ui:113
@@ -132,7 +176,13 @@ msgid "Overrides"
 msgstr ""
 
 #: smart-auto-move@khimaros.com/ui/prefs-adw.ui:138
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:140
 msgid "Add Application"
+msgstr ""
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:145
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:147
+msgid "Choose Window"
 msgstr ""
 
 #: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:10
@@ -153,22 +203,8 @@ msgstr ""
 msgid "Sync Frequency (ms)"
 msgstr ""
 
-#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:25
-msgid ""
-"Frequency in milliseconds to synchronize changes to active windows into the "
-"in-memory store."
-msgstr ""
-
 #: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:29
 msgid "Save Frequency (ms)"
-msgstr ""
-
-#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:30
-msgid "Frequency in milliseconds to persist the in-memory store to disk."
-msgstr ""
-
-#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:35
-msgid "Minimum threshold for matching restored windows."
 msgstr ""
 
 #: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:39
@@ -179,26 +215,10 @@ msgstr ""
 msgid "Overrides for restored window data."
 msgstr ""
 
-#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:50
-msgid "Do not update saved window data."
-msgstr ""
-
-#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:55
-msgid "Follow apps when they are moved to another workspace."
-msgstr ""
-
 #: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:59
 msgid "Ignore position"
 msgstr ""
 
-#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:60
-msgid "Do not restore windows' position."
-msgstr ""
-
 #: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:64
 msgid "Ignore workspace"
-msgstr ""
-
-#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:65
-msgid "Do not restore windows' workspace."
 msgstr ""

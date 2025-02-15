@@ -32,8 +32,8 @@
         <child>
           <object class="AdwSpinRow" id="match-threshold-spin">
             <property name="title" translatable="yes">Match Threshold</property>
-            <property name="subtitle" translatable="1">Minimum threshold for matching restored windows.</property>
-            <property name="tooltip-text" translatable="1">Minimum threshold for matching restored windows.</property>
+            <property name="subtitle" translatable="yes">Minimum threshold for matching restored windows.</property>
+            <property name="tooltip-text" translatable="yes">Minimum threshold for matching restored windows.</property>
             <property name="adjustment">
               <object class="GtkAdjustment">
                 <property name="lower">0</property>
@@ -48,8 +48,8 @@
         <child>
           <object class="AdwSpinRow" id="sync-frequency-spin">
             <property name="title" translatable="yes">Sync Frequency (milliseconds)</property>
-            <property name="subtitle" translatable="1">Frequency in milliseconds to synchronize changes to active windows into the in-memory store.</property>
-            <property name="tooltip-text" translatable="1">Frequency in milliseconds to synchronize changes to active windows into the in-memory store.</property>
+            <property name="subtitle" translatable="yes">Frequency in milliseconds to synchronize changes to active windows into the in-memory store.</property>
+            <property name="tooltip-text" translatable="yes">Frequency in milliseconds to synchronize changes to active windows into the in-memory store.</property>
             <property name="adjustment">
               <object class="GtkAdjustment">
                 <property name="lower">50</property>
@@ -64,8 +64,8 @@
         <child>
           <object class="AdwSpinRow" id="save-frequency-spin">
             <property name="title" translatable="yes">Save Frequency (milliseconds)</property>
-            <property name="subtitle" translatable="1">Frequency in milliseconds to persist the in-memory store to disk.</property>
-            <property name="tooltip-text" translatable="1">Frequency in milliseconds to persist the in-memory store to disk.</property>
+            <property name="subtitle" translatable="yes">Frequency in milliseconds to persist the in-memory store to disk.</property>
+            <property name="tooltip-text" translatable="yes">Frequency in milliseconds to persist the in-memory store to disk.</property>
             <property name="adjustment">
               <object class="GtkAdjustment">
                 <property name="lower">200</property>
@@ -80,29 +80,29 @@
         <child>
           <object class="AdwSwitchRow" id="freeze-saves-switch">
             <property name="title" translatable="yes">Freeze Saves</property>
-            <property name="subtitle" translatable="1">Do not update saved window data.</property>
-            <property name="tooltip-text" translatable="1">Do not update saved window data.</property>
+            <property name="subtitle" translatable="yes">Do not update saved window data.</property>
+            <property name="tooltip-text" translatable="yes">Do not update saved window data.</property>
           </object>
         </child>
         <child>
           <object class="AdwSwitchRow" id="activate-workspace-switch">
             <property name="title" translatable="yes">Activate Workspace</property>
-            <property name="subtitle" translatable="1">Follow apps when they are moved to another workspace.</property>
-            <property name="tooltip-text" translatable="1">Follow apps when they are moved to another workspace.</property>
+            <property name="subtitle" translatable="yes">Follow apps when they are moved to another workspace.</property>
+            <property name="tooltip-text" translatable="yes">Follow apps when they are moved to another workspace.</property>
           </object>
         </child>
         <child>
           <object class="AdwSwitchRow" id="ignore-position-switch">
             <property name="title" translatable="yes">Ignore Position</property>
-            <property name="subtitle" translatable="1">Do not restore windows&apos; position.</property>
-            <property name="tooltip-text" translatable="1">Do not restore windows&apos; position.</property>
+            <property name="subtitle" translatable="yes">Do not restore windows&apos; position.</property>
+            <property name="tooltip-text" translatable="yes">Do not restore windows&apos; position.</property>
           </object>
         </child>
         <child>
           <object class="AdwSwitchRow" id="ignore-workspace-switch">
             <property name="title" translatable="yes">Ignore Workspace</property>
-            <property name="subtitle" translatable="1">Do not restore windows&apos; workspace.</property>
-            <property name="tooltip-text" translatable="1">Do not restore windows&apos; workspace.</property>
+            <property name="subtitle" translatable="yes">Do not restore windows&apos; workspace.</property>
+            <property name="tooltip-text" translatable="yes">Do not restore windows&apos; workspace.</property>
           </object>
         </child>
       </object>
@@ -137,12 +137,14 @@
               <object class="GtkButton" id="overrides-add-application-button">
                 <property name="label" translatable="yes">Add Application</property>
                 <property name="valign">center</property>
+                <property name="tooltip-text" translatable="yes">Add Application</property>
               </object>
             </child>
             <child>
               <object class="GtkButton" id="overrides-add-window-button">
-                <property name="label" translatable="1">Choose Window</property>
+                <property name="label" translatable="yes">Choose Window</property>
                 <property name="valign">center</property>
+                <property name="tooltip-text" translatable="yes">Choose Window</property>
               </object>
             </child>
           </object>

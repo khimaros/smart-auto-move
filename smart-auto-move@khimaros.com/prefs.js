@@ -191,9 +191,9 @@ export default class SAMPreferences extends ExtensionPreferences {
         );
 
         const action_widget = new Gtk.ComboBoxText();
-        action_widget.append_text("IGNORE", _("IGNORE"));
-        action_widget.append_text("RESTORE", _("RESTORE"));
-        action_widget.append_text("DEFAULT", _("DEFAULT"));
+        action_widget.append_text(_("IGNORE"), "IGNORE");
+        action_widget.append_text(_("RESTORE"), "RESTORE");
+        action_widget.append_text(_("DEFAULT"), "DEFAULT");
         action_widget.set_valign(Gtk.Align.CENTER);
         row.add_suffix(action_widget);
         if (o.action !== undefined) action_widget.set_active(o.action);
@@ -209,9 +209,11 @@ export default class SAMPreferences extends ExtensionPreferences {
         });
 
         const delete_widget = new Gtk.Button({
-          label: _("Delete"),
           valign: Gtk.Align.CENTER,
+          css_classes: ["destructive-action"],
         });
+        delete_widget.set_tooltip_text(_("Delete"));
+        delete_widget.set_icon_name("user-trash-symbolic");
         row.add_suffix(delete_widget);
         let delete_signal = delete_widget.connect("clicked", () => {
           wshos.splice(oi, 1);
@@ -267,9 +269,11 @@ export default class SAMPreferences extends ExtensionPreferences {
         row.set_tooltip_text(wsh + " - " + sw.title);
         if (!sw.occupied) row.set_subtitle(_("Not occupied"));
         const delete_widget = new Gtk.Button({
-          label: _("Delete"),
           valign: Gtk.Align.CENTER,
+          css_classes: ["destructive-action"],
         });
+        delete_widget.set_tooltip_text(_("Delete"));
+        delete_widget.set_icon_name("user-trash-symbolic");
         row.add_suffix(delete_widget);
         const delete_signal = delete_widget.connect("clicked", () => {
           sws.splice(swi, 1);
@@ -281,9 +285,10 @@ export default class SAMPreferences extends ExtensionPreferences {
         });
 
         const ignore_widget = new Gtk.Button({
-          label: _("OVERRIDE"),
           valign: Gtk.Align.CENTER,
         });
+        ignore_widget.set_tooltip_text(_("OVERRIDE"));
+        ignore_widget.set_icon_name("application-add-symbolic");
         row.add_suffix(ignore_widget);
         const ignore_signal = ignore_widget.connect("clicked", () => {
           let o = { query: { title: sw.title }, action: 0 };
@@ -299,9 +304,12 @@ export default class SAMPreferences extends ExtensionPreferences {
         });
 
         const ignore_any_widget = new Gtk.Button({
-          label: _("OVERRIDE (ANY)"),
+          label: _("ANY"),
           valign: Gtk.Align.CENTER,
+          css_classes: ["suggested-action"],
         });
+        ignore_any_widget.set_tooltip_text(_("OVERRIDE (ANY)"));
+        ignore_any_widget.set_icon_name("application-add-symbolic");
         row.add_suffix(ignore_any_widget);
         const ignore_any_signal = ignore_any_widget.connect("clicked", () => {
           let o = {
