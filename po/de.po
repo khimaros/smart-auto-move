@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-15 08:02+0100\n"
-"PO-Revision-Date: 2025-02-15 08:21+0100\n"
+"POT-Creation-Date: 2025-02-21 16:17+0100\n"
+"PO-Revision-Date: 2025-02-21 16:18+0100\n"
 "Last-Translator: Christian Lauinger <christian@lauinger-clan.de>\n"
 "Language-Team: \n"
 "Language: de\n"
@@ -18,43 +18,56 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.5\n"
 
-#: smart-auto-move@khimaros.com/prefs.js:165
+#: smart-auto-move@khimaros.com/prefs.js:28
+msgid "Select"
+msgstr "Auswählen"
+
+#: smart-auto-move@khimaros.com/prefs.js:31
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: smart-auto-move@khimaros.com/prefs.js:172
+msgid "Select app"
+msgstr "App auswählen"
+
+#: smart-auto-move@khimaros.com/prefs.js:247
+#: smart-auto-move@khimaros.com/prefs.js:390
 msgid "ANY"
 msgstr "Beliebig"
 
-#: smart-auto-move@khimaros.com/prefs.js:194
+#: smart-auto-move@khimaros.com/prefs.js:276
 #: smart-auto-move@khimaros.com/ui/prefs-adw.ui:25
 #: smart-auto-move@khimaros.com/ui/prefs-gtk4.ui:127
 #: smart-auto-move@khimaros.com/ui/templates-gtk4.ui:44
 msgid "IGNORE"
 msgstr "Ignorieren"
 
-#: smart-auto-move@khimaros.com/prefs.js:195
+#: smart-auto-move@khimaros.com/prefs.js:277
 #: smart-auto-move@khimaros.com/ui/prefs-adw.ui:26
 #: smart-auto-move@khimaros.com/ui/prefs-gtk4.ui:128
 #: smart-auto-move@khimaros.com/ui/templates-gtk4.ui:45
 msgid "RESTORE"
 msgstr "Wiederherstellen"
 
-#: smart-auto-move@khimaros.com/prefs.js:196
+#: smart-auto-move@khimaros.com/prefs.js:278
 #: smart-auto-move@khimaros.com/ui/templates-gtk4.ui:46
 msgid "DEFAULT"
 msgstr "Standard"
 
-#: smart-auto-move@khimaros.com/prefs.js:214
-#: smart-auto-move@khimaros.com/prefs.js:272
+#: smart-auto-move@khimaros.com/prefs.js:297
+#: smart-auto-move@khimaros.com/prefs.js:358
 msgid "Delete"
 msgstr "Löschen"
 
-#: smart-auto-move@khimaros.com/prefs.js:268
+#: smart-auto-move@khimaros.com/prefs.js:353
 msgid "Not occupied"
 msgstr "Nicht besetzt"
 
-#: smart-auto-move@khimaros.com/prefs.js:288
+#: smart-auto-move@khimaros.com/prefs.js:373
 msgid "OVERRIDE"
 msgstr "Überschreiben"
 
-#: smart-auto-move@khimaros.com/prefs.js:306
+#: smart-auto-move@khimaros.com/prefs.js:394
 msgid "OVERRIDE (ANY)"
 msgstr "Überschreiben (beliebig)"
 
@@ -181,15 +194,9 @@ msgstr "Nicht besetzte Fenster aufräumen"
 msgid "Overrides"
 msgstr "Überschreibungen"
 
-#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:138
-#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:140
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:135
 msgid "Add Application"
 msgstr "Anwendung hinzufügen"
-
-#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:145
-#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:147
-msgid "Choose Window"
-msgstr "Fenster auswählen"
 
 #: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:10
 msgid "Persisted window data serialized to JSON."
@@ -231,3 +238,5 @@ msgstr "Position ignorieren"
 msgid "Ignore workspace"
 msgstr "Arbeitsbereich ignorieren"
 
+#~ msgid "Choose Window"
+#~ msgstr "Fenster auswählen"

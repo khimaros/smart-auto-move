@@ -131,22 +131,8 @@
         <object class="AdwPreferencesGroup" id="overrides-listbox">
           <property name="title" translatable="yes"></property>
           <child>
-          <object class="AdwActionRow" id="smartautomove_p3row1">
-            <property name="title" translatable="yes"></property>
-            <child>
-              <object class="GtkButton" id="overrides-add-application-button">
-                <property name="label" translatable="yes">Add Application</property>
-                <property name="valign">center</property>
-                <property name="tooltip-text" translatable="yes">Add Application</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkButton" id="overrides-add-window-button">
-                <property name="label" translatable="yes">Choose Window</property>
-                <property name="valign">center</property>
-                <property name="tooltip-text" translatable="yes">Choose Window</property>
-              </object>
-            </child>
+          <object class="AdwButtonRow" id="overrides-add-application-button">
+            <property name="title" translatable="yes">Add Application</property>
           </object>
         </child>
         </object>
