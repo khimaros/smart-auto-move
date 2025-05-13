@@ -1,0 +1,231 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# A1exAK a1exak@outlook.com, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-05-12 12:54+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Alexey Kamaec a1exak@outlook.com\n"
+"Language-Team: RU <LL@li.org>\n"
+"Language: Russian\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: smart-auto-move@khimaros.com/prefs.js:28
+msgid "Select"
+msgstr "Выбрать"
+
+#: smart-auto-move@khimaros.com/prefs.js:31
+msgid "Cancel"
+msgstr "Отмена"
+
+#: smart-auto-move@khimaros.com/prefs.js:172
+msgid "Select app"
+msgstr "Приложение"
+
+#: smart-auto-move@khimaros.com/prefs.js:247
+#: smart-auto-move@khimaros.com/prefs.js:390
+msgid "ANY"
+msgstr "ЛЮБОЙ"
+
+#: smart-auto-move@khimaros.com/prefs.js:276
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:25
+#: smart-auto-move@khimaros.com/ui/prefs-gtk4.ui:127
+#: smart-auto-move@khimaros.com/ui/templates-gtk4.ui:44
+msgid "IGNORE"
+msgstr "ИГНОРИРОВАТЬ"
+
+#: smart-auto-move@khimaros.com/prefs.js:277
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:26
+#: smart-auto-move@khimaros.com/ui/prefs-gtk4.ui:128
+#: smart-auto-move@khimaros.com/ui/templates-gtk4.ui:45
+msgid "RESTORE"
+msgstr "ВОССТАНОВИТЬ"
+
+#: smart-auto-move@khimaros.com/prefs.js:278
+#: smart-auto-move@khimaros.com/ui/templates-gtk4.ui:46
+msgid "DEFAULT"
+msgstr "ПО УМОЛЧАНИЮ"
+
+#: smart-auto-move@khimaros.com/prefs.js:297
+#: smart-auto-move@khimaros.com/prefs.js:358
+msgid "Delete"
+msgstr "Удалить"
+
+#: smart-auto-move@khimaros.com/prefs.js:353
+msgid "Not occupied"
+msgstr "Не занято"
+
+#: smart-auto-move@khimaros.com/prefs.js:373
+msgid "OVERRIDE"
+msgstr "ПЕРЕОПРЕДЕЛИТЬ"
+
+#: smart-auto-move@khimaros.com/prefs.js:394
+msgid "OVERRIDE (ANY)"
+msgstr "ПЕРЕОПРЕДЕЛИТЬ (ЛЮБОЙ)"
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:5
+msgid "General"
+msgstr "Общий"
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:9
+msgid "Settings"
+msgstr "Настройки"
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:12
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:14
+msgid "Debug Logging"
+msgstr "Журнал"
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:13
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:14
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:15
+msgid "Write detailed logs about extension behavior."
+msgstr "Вести подробный журналы о поведении расширения."
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:19
+msgid "Default Synchronization Mode"
+msgstr "Режим синхронизации по умолчанию"
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:20
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:21
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:40
+msgid "Default mode when synchronizing windows."
+msgstr "Режим по умолчанию при синхронизации окон."
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:34
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:34
+msgid "Match Threshold"
+msgstr "Порог соответствия"
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:35
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:36
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:35
+msgid "Minimum threshold for matching restored windows."
+msgstr "Минимальный порог для сопоставления восстановленных окон."
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:50
+msgid "Sync Frequency (milliseconds)"
+msgstr "Частота синхронизации (мсек)"
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:51
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:52
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:25
+msgid ""
+"Frequency in milliseconds to synchronize changes to active windows into the "
+"in-memory store."
+msgstr "Частота в миллисекундах для синхронизации изменений в активных окнах в хранилище памяти."
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:66
+msgid "Save Frequency (milliseconds)"
+msgstr "Частота сохранения (мсек)"
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:67
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:68
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:30
+msgid "Frequency in milliseconds to persist the in-memory store to disk."
+msgstr "Частота в миллисекундах для сохранения содержимого памяти на диске."
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:82
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:49
+msgid "Freeze Saves"
+msgstr "Заморозить Сохранить"
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:83
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:84
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:50
+msgid "Do not update saved window data."
+msgstr "Не обновлять сохраненные данные окна"
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:89
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:54
+msgid "Activate Workspace"
+msgstr "Активировать рабочее пространство"
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:90
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:91
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:55
+msgid "Follow apps when they are moved to another workspace."
+msgstr "Отслеживайте приложения при их перемещении в другое рабочее пространство."
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:96
+msgid "Ignore Position"
+msgstr "Игнорировать позицию"
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:97
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:98
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:60
+msgid "Do not restore windows' position."
+msgstr "Не восстанавливайте положение окон."
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:103
+msgid "Ignore Workspace"
+msgstr "Игнорировать рабочее пространство"
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:104
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:105
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:65
+msgid "Do not restore windows' workspace."
+msgstr "Не восстанавливайте окно рабочего пространства."
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:113
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:9
+msgid "Saved Windows"
+msgstr "Сохраненные окна"
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:120
+msgid "Cleanup Non-occupied Windows"
+msgstr "Очистка незанятых окон"
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:128
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:44
+msgid "Overrides"
+msgstr "Переопределить"
+
+#: smart-auto-move@khimaros.com/ui/prefs-adw.ui:135
+msgid "Add Application"
+msgstr "Добавить приложение"
+
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:10
+msgid "Persisted window data serialized to JSON."
+msgstr "Сохраненные данные окна сериализованы в JSON."
+
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:19
+msgid "Startup Delay (ms)"
+msgstr "Задержка запуска (мсек)"
+
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:20
+msgid ""
+"Period of time in milliseconds to wait between seeing a window and writing "
+"it to the in-memory store."
+msgstr "Период времени в миллисекундах между просмотром окна и записью его в хранилище памяти."
+
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:24
+msgid "Sync Frequency (ms)"
+msgstr "Частота синхронизации (мсек)"
+
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:29
+msgid "Save Frequency (ms)"
+msgstr "Частота сохранения (мсек)"
+
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:39
+msgid "Sync Mode"
+msgstr "Режим синхронизации"
+
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:45
+msgid "Overrides for restored window data."
+msgstr "Переопределения для восстановленных данных окна."
+
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:59
+msgid "Ignore position"
+msgstr "Игнорировать позицию"
+
+#: smart-auto-move@khimaros.com/schemas/org.gnome.shell.extensions.smart-auto-move.gschema.xml:64
+msgid "Ignore workspace"
+msgstr "Игнорировать рабочее пространство"
