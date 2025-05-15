@@ -8,6 +8,8 @@ smart-auto-move is a Gnome Shell extension which keeps track of all application 
   </a>
 </p>
 
+**NOTE**: this extension follows the GNOME version in Debian "testing". if you are using a bleeding edge GNOME release, you can "Disable version validation" at https://extensions.gnome.org/local/ to install this extension on any GNOME version before it is officially supported.
+
 ## screenshots
 
 ![screenshot: saved windows preferences](docs/screenshot-saved-windows.png)
