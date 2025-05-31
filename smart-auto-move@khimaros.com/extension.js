@@ -180,7 +180,7 @@ function windowData(win) {
 		fullscreen: win.is_fullscreen(),
 		above: win.is_above(),
 		monitor: win.get_monitor(),
-		//on_all_workspaces: win.is_on_all_workspaces(),
+		on_all_workspaces: win.is_on_all_workspaces(),
 		x: win_rect.x,
 		y: win_rect.y,
 		width: win_rect.width,
@@ -298,7 +298,7 @@ function moveWindow(win, sw) {
 
 	if (sw.above) win.make_above();
 
-	//if (sw.on_all_workspaces) ...
+	if (sw.on_all_workspaces) win.stick();
 
 	if (activateWorkspace && !ws.active && !ignoreWorkspace) ws.activate(true)
 
