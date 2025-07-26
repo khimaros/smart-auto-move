@@ -17,6 +17,7 @@ let freezeSaves;
 let activateWorkspace;
 let ignorePosition;
 let ignoreWorkspace;
+let ignoreMonitor;
 let overrides;
 let savedWindows;
 
@@ -37,6 +38,7 @@ let changedFreezeSavesSignal;
 let changedActivateWorkspaceSignal;
 let changedIgnorePositionSignal;
 let changedIgnoreWorkspaceSignal;
+let changedIgnoreMonitorSignal;
 let changedOverridesSignal;
 let changedSavedWindowsSignal;
 
@@ -92,6 +94,7 @@ function initializeSettings(extension) {
 	activateWorkspace = Common.DEFAULT_ACTIVATE_WORKSPACE;
 	ignorePosition = Common.DEFAULT_IGNORE_POSITION;
 	ignoreWorkspace = Common.DEFAULT_IGNORE_WORKSPACE;
+	ignoreMonitor = Common.DEFAULT_IGNORE_MONITOR;
 	overrides = new Object();
 	savedWindows = new Object();
 
@@ -110,6 +113,7 @@ function cleanupSettings() {
 	activateWorkspace = null;
 	ignorePosition = null;
 	ignoreWorkspace = null;
+	ignoreMonitor = null;
 	overrides = null;
 	savedWindows = null;
 }
@@ -126,6 +130,7 @@ function restoreSettings() {
 	handleChangedActivateWorkspace();
 	handleChangedIgnorePosition();
 	handleChangedIgnoreWorkspace();
+	handleChangedIgnoreMonitor();
 	handleChangedOverrides();
 	handleChangedSavedWindows();
 	dumpSavedWindows();
@@ -142,6 +147,7 @@ function saveSettings() {
 	settings.set_boolean(Common.SETTINGS_KEY_ACTIVATE_WORKSPACE, activateWorkspace);
 	settings.set_boolean(Common.SETTINGS_KEY_IGNORE_POSITION, ignorePosition);
 	settings.set_boolean(Common.SETTINGS_KEY_IGNORE_WORKSPACE, ignoreWorkspace);
+	settings.set_boolean(Common.SETTINGS_KEY_IGNORE_MONITOR, ignoreMonitor);
 
 	let newOverrides = JSON.stringify(overrides);
 	settings.set_string(Common.SETTINGS_KEY_OVERRIDES, newOverrides);
@@ -273,7 +279,9 @@ function findOverrideAction(win, threshold) {
 function moveWindow(win, sw) {
 	//debug('moveWindow(): ' + JSON.stringify(sw));
 
-	win.move_to_monitor(sw.monitor);
+	if (!ignoreMonitor) {
+		win.move_to_monitor(sw.monitor);
+	}
 
 	let ws = global.workspaceManager.get_workspace_by_index(sw.workspace);
 	if (!ignoreWorkspace) {
@@ -455,6 +463,11 @@ function handleChangedIgnoreWorkspace() {
 	debug('[smart-auto-move] handleChangedIgnoreWorkspace(): ' + ignoreWorkspace);
 }
 
+function handleChangedIgnoreMonitor() {
+	ignoreMonitor = settings.get_boolean(Common.SETTINGS_KEY_IGNORE_MONITOR);
+	debug('[smart-auto-move] handleChangedIgnoreMonitor(): ' + ignoreMonitor);
+}
+
 function handleChangedOverrides() {
 	overrides = JSON.parse(settings.get_string(Common.SETTINGS_KEY_OVERRIDES));
 	debug('handleChangedOverrides(): ' + JSON.stringify(overrides));
@@ -502,6 +515,7 @@ function connectSettingChangedSignals() {
 	changedActivateWorkspaceSignal = settings.connect('changed::' + Common.SETTINGS_KEY_ACTIVATE_WORKSPACE, handleChangedActivateWorkspace);
 	changedIgnorePositionSignal = settings.connect('changed::' + Common.SETTINGS_KEY_IGNORE_POSITION, handleChangedIgnorePosition);
 	changedIgnoreWorkspaceSignal = settings.connect('changed::' + Common.SETTINGS_KEY_IGNORE_WORKSPACE, handleChangedIgnoreWorkspace);
+	changedIgnoreMonitorSignal = settings.connect('changed::' + Common.SETTINGS_KEY_IGNORE_MONITOR, handleChangedIgnoreMonitor);
 	changedOverridesSignal = settings.connect('changed::' + Common.SETTINGS_KEY_OVERRIDES, handleChangedOverrides);
 	changedSavedWindowsSignal = settings.connect('changed::' + Common.SETTINGS_KEY_SAVED_WINDOWS, handleChangedSavedWindows);
 }

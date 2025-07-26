@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## version 32
+
+- prepare for internationalization
+- add search/filter for saved windows
+- add "Ignore Monitor" preference
+- "Add Application" implemented
+- cleanup old GTK3 UI files
+
 ## version 14
 
 - skip tooltips non-tasklist windows

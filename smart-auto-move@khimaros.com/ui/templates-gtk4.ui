@@ -33,7 +33,6 @@
                 <property name="focusable">1</property>
                 <property name="text" translatable="1">0.00</property>
                 <property name="adjustment">override-threshold-adjustment</property>
-                <property name="climb-rate">0.10</property>
                 <property name="digits">2</property>
                 <property name="numeric">1</property>
               </object>

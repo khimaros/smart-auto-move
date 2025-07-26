@@ -2,11 +2,8 @@ pack: smart-auto-move@khimaros.com.shell-extension.zip
 .PHONY: pack
 
 clean:
-	rm ./smart-auto-move@khimaros.com.shell-extension.zip ./smart-auto-move@khimaros.com/ui/*-gtk4.ui ./smart-auto-move@khimaros.com/schemas/gschemas.compiled
+	rm -f ./smart-auto-move@khimaros.com.shell-extension.zip ./smart-auto-move@khimaros.com/schemas/gschemas.compiled
 .PHONY: clean
-
-smart-auto-move@khimaros.com/ui/%-gtk4.ui: smart-auto-move@khimaros.com/ui.in/%-gtk3.ui
-	gtk4-builder-tool simplify --3to4 $< > $@
 
 smart-auto-move@khimaros.com.shell-extension.zip: schemas ui ./smart-auto-move@khimaros.com/*
 	gnome-extensions pack --force --extra-source=./lib/ --extra-source=./ui/ ./smart-auto-move@khimaros.com/

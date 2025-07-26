@@ -1,3 +1,4 @@
 smart-auto-move@khimaros.com.shell-extension.zip
 smart-auto-move.dconf
-**/*.ui~
+*.ui~
+/.aider*

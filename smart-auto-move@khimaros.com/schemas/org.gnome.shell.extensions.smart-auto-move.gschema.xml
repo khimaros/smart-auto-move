@@ -64,5 +64,10 @@
       <summary>Ignore workspace</summary>
       <description>Do not restore windows' workspace.</description>
     </key>
+    <key name="ignore-monitor" type="b">
+      <default>false</default>
+      <summary>Ignore Monitor</summary>
+      <description>Do not restore windows' monitor.</description>
+    </key>
   </schema>
 </schemalist>

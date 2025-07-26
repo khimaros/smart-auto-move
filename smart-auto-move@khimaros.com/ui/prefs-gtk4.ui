@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <requires lib="gtk" version="4.0"/>
+  <requires lib="adw" version="1.0"/>
   <object class="GtkAdjustment" id="match-threshold-adjustment">
     <property name="upper">1</property>
     <property name="step-increment">0.05</property>
@@ -18,302 +19,159 @@
     <property name="step-increment">10</property>
     <property name="page-increment">100</property>
   </object>
-  <object class="GtkNotebook" id="prefs-notebook">
-    <property name="focusable">1</property>
-    <property name="hexpand">1</property>
-    <property name="vexpand">1</property>
-    <property name="scrollable">1</property>
+  <object class="AdwPreferencesPage" id="general-page">
+    <property name="title" translatable="yes">General</property>
+    <property name="icon-name">dialog-information-symbolic</property>
     <child>
-      <object class="GtkNotebookPage">
-        <property name="child">
-          <object class="GtkScrolledWindow">
-            <property name="focusable">1</property>
-            <property name="hexpand">1</property>
-            <property name="vexpand">1</property>
-            <property name="child">
-              <object class="GtkViewport">
-                <property name="hexpand">1</property>
-                <property name="vexpand">1</property>
-                <property name="child">
-                  <object class="GtkGrid">
-                    <property name="valign">start</property>
-                    <property name="margin-start">8</property>
-                    <property name="margin-end">8</property>
-                    <property name="margin-top">8</property>
-                    <property name="margin-bottom">8</property>
-                    <property name="hexpand">1</property>
-                    <property name="vexpand">1</property>
-                    <property name="row-spacing">8</property>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="tooltip-text" translatable="1">Write detailed logs about extension behavior.</property>
-                        <property name="halign">start</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="1">Debug Logging</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">0</property>
-                          <property name="column-span">4</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSwitch" id="debug-logging-switch">
-                        <property name="focusable">1</property>
-                        <property name="halign">end</property>
-                        <property name="valign">center</property>
-                        <layout>
-                          <property name="column">4</property>
-                          <property name="row">0</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="tooltip-text" translatable="1">Default mode when synchronizing windows.</property>
-                        <property name="halign">start</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="1">Default Synchronization Mode</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">1</property>
-                          <property name="column-span">4</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="tooltip-text" translatable="1">Minimum threshold for matching restored windows.</property>
-                        <property name="halign">start</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="1">Match Threshold</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">2</property>
-                          <property name="column-span">4</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="tooltip-text" translatable="1">Frequency in milliseconds to synchronize changes to active windows into the in-memory store.</property>
-                        <property name="halign">start</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="1">Sync Frequency (milliseconds)</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">3</property>
-                          <property name="column-span">4</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="tooltip-text" translatable="1">Frequency in milliseconds to persist the in-memory store to disk.</property>
-                        <property name="halign">start</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="1">Save Frequency (milliseconds)</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">4</property>
-                          <property name="column-span">4</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkComboBoxText" id="sync-mode-combo">
-                        <property name="valign">center</property>
-                        <items>
-                          <item id="IGNORE" translatable="yes">IGNORE</item>
-                          <item id="RESTORE" translatable="yes">RESTORE</item>
-                        </items>
-                        <layout>
-                          <property name="column">4</property>
-                          <property name="row">1</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSpinButton" id="match-threshold-spin">
-                        <property name="focusable">1</property>
-                        <property name="adjustment">match-threshold-adjustment</property>
-                        <property name="climb-rate">0.10</property>
-                        <property name="digits">2</property>
-                        <property name="numeric">1</property>
-                        <layout>
-                          <property name="column">4</property>
-                          <property name="row">2</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSpinButton" id="sync-frequency-spin">
-                        <property name="focusable">1</property>
-                        <property name="adjustment">sync-frequency-adjustment</property>
-                        <property name="climb-rate">10</property>
-                        <property name="numeric">1</property>
-                        <layout>
-                          <property name="column">4</property>
-                          <property name="row">3</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSpinButton" id="save-frequency-spin">
-                        <property name="focusable">1</property>
-                        <property name="adjustment">save-frequency-adjustment</property>
-                        <property name="numeric">1</property>
-                        <layout>
-                          <property name="column">4</property>
-                          <property name="row">4</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="tooltip-text" translatable="1">Do not update saved window data.</property>
-                        <property name="halign">start</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="1">Freeze Saves</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">5</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSwitch" id="freeze-saves-switch">
-                        <property name="focusable">1</property>
-                        <property name="halign">end</property>
-                        <property name="valign">center</property>
-                        <layout>
-                          <property name="column">4</property>
-                          <property name="row">5</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="tooltip-text" translatable="1">Follow apps when they are moved to another workspace.</property>
-                        <property name="halign">start</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="1">Activate Workspace</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">6</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSwitch" id="activate-workspace-switch">
-                        <property name="focusable">1</property>
-                        <property name="halign">end</property>
-                        <property name="valign">center</property>
-                        <layout>
-                          <property name="column">4</property>
-                          <property name="row">6</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="tooltip-text" translatable="1">Do not restore windows&apos; position.</property>
-                        <property name="halign">start</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="1">Ignore Position</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">7</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSwitch" id="ignore-position-switch">
-                        <property name="focusable">1</property>
-                        <property name="halign">end</property>
-                        <property name="valign">center</property>
-                        <layout>
-                          <property name="column">4</property>
-                          <property name="row">7</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="tooltip-text" translatable="1">Do not restore windows&apos; workspace.</property>
-                        <property name="halign">start</property>
-                        <property name="hexpand">1</property>
-                        <property name="label" translatable="1">Ignore Workspace</property>
-                        <layout>
-                          <property name="column">0</property>
-                          <property name="row">8</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSwitch" id="ignore-workspace-switch">
-                        <property name="focusable">1</property>
-                        <property name="halign">end</property>
-                        <property name="valign">center</property>
-                        <layout>
-                          <property name="column">4</property>
-                          <property name="row">8</property>
-                        </layout>
-                      </object>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                  </object>
-                </property>
+      <object class="AdwPreferencesGroup">
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Debug Logging</property>
+            <property name="subtitle" translatable="yes">Write detailed logs about extension behavior.</property>
+            <child>
+              <object class="GtkSwitch" id="debug-logging-switch">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
               </object>
-            </property>
+            </child>
           </object>
-        </property>
-        <property name="tab">
-          <object class="GtkLabel">
-            <property name="label" translatable="1">General</property>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Default Synchronization Mode</property>
+            <property name="subtitle" translatable="yes">Default mode when synchronizing windows.</property>
+            <child>
+              <object class="GtkComboBoxText" id="sync-mode-combo">
+                <property name="valign">center</property>
+                <items>
+                  <item id="IGNORE" translatable="yes">IGNORE</item>
+                  <item id="RESTORE" translatable="yes">RESTORE</item>
+                </items>
+              </object>
+            </child>
           </object>
-        </property>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Default Match Threshold</property>
+            <property name="subtitle" translatable="yes">Default minimum threshold for matching restored windows.</property>
+            <child>
+              <object class="GtkSpinButton" id="match-threshold-spin">
+                <property name="focusable">1</property>
+                <property name="adjustment">match-threshold-adjustment</property>
+                <property name="climb-rate">0.10</property>
+                <property name="digits">2</property>
+                <property name="numeric">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Sync Frequency (milliseconds)</property>
+            <property name="subtitle" translatable="yes">Frequency in milliseconds to synchronize changes to active windows into the in-memory store.</property>
+            <child>
+              <object class="GtkSpinButton" id="sync-frequency-spin">
+                <property name="focusable">1</property>
+                <property name="adjustment">sync-frequency-adjustment</property>
+                <property name="climb-rate">10</property>
+                <property name="numeric">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Save Frequency (milliseconds)</property>
+            <property name="subtitle" translatable="yes">Frequency in milliseconds to persist the in-memory store to disk.</property>
+            <child>
+              <object class="GtkSpinButton" id="save-frequency-spin">
+                <property name="focusable">1</property>
+                <property name="adjustment">save-frequency-adjustment</property>
+                <property name="numeric">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Freeze Saves</property>
+            <property name="subtitle" translatable="yes">Do not update saved window data.</property>
+            <child>
+              <object class="GtkSwitch" id="freeze-saves-switch">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Activate Workspace</property>
+            <property name="subtitle" translatable="yes">Follow apps when they are moved to another workspace.</property>
+            <child>
+              <object class="GtkSwitch" id="activate-workspace-switch">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Ignore Position</property>
+            <property name="subtitle" translatable="yes">Do not restore windows' position.</property>
+            <child>
+              <object class="GtkSwitch" id="ignore-position-switch">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Ignore Workspace</property>
+            <property name="subtitle" translatable="yes">Do not restore windows' workspace.</property>
+            <child>
+              <object class="GtkSwitch" id="ignore-workspace-switch">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Ignore Monitor</property>
+            <property name="subtitle" translatable="yes">Do not restore windows' monitor.</property>
+            <child>
+              <object class="GtkSwitch" id="ignore-monitor-switch">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+          </object>
+        </child>
       </object>
     </child>
+  </object>
+  <object class="AdwPreferencesPage" id="saved-windows-page">
+    <property name="title" translatable="yes">Saved Windows</property>
+    <property name="icon-name">computer-fail-symbolic</property>
     <child>
-      <object class="GtkNotebookPage">
-        <property name="position">1</property>
-        <property name="child">
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkSearchEntry" id="saved-windows-filter-entry">
+            <property name="margin-start">12</property>
+            <property name="margin-end">12</property>
+            <property name="margin-top">12</property>
+            <property name="margin-bottom">12</property>
+            <property name="placeholder-text" translatable="yes">Search...</property>
+          </object>
+        </child>
+        <child>
           <object class="GtkScrolledWindow">
             <property name="focusable">1</property>
             <property name="hexpand">1</property>
@@ -350,67 +208,56 @@
               </object>
             </property>
           </object>
-        </property>
-        <property name="tab">
-          <object class="GtkLabel">
-            <property name="label" translatable="1">Saved Windows</property>
-          </object>
-        </property>
+        </child>
       </object>
     </child>
+  </object>
+  <object class="AdwPreferencesPage" id="overrides-page">
+    <property name="title" translatable="yes">Overrides</property>
+    <property name="icon-name">preferences-system-symbolic</property>
     <child>
-      <object class="GtkNotebookPage">
-        <property name="position">2</property>
+      <object class="GtkScrolledWindow">
+        <property name="focusable">1</property>
+        <property name="hexpand">1</property>
+        <property name="vexpand">1</property>
         <property name="child">
-          <object class="GtkScrolledWindow">
-            <property name="focusable">1</property>
+          <object class="GtkViewport">
             <property name="hexpand">1</property>
             <property name="vexpand">1</property>
             <property name="child">
-              <object class="GtkViewport">
+              <object class="GtkListBox" id="overrides-listbox">
                 <property name="hexpand">1</property>
                 <property name="vexpand">1</property>
-                <property name="child">
-                  <object class="GtkListBox" id="overrides-listbox">
-                    <property name="hexpand">1</property>
-                    <property name="vexpand">1</property>
-                    <property name="selection-mode">none</property>
-                    <property name="activate-on-single-click">0</property>
-                    <child>
-                      <object class="GtkListBoxRow">
-                        <property name="focusable">1</property>
-                        <property name="child">
-                          <object class="GtkBox">
-                            <property name="homogeneous">1</property>
-                            <child>
-                              <object class="GtkButton" id="overrides-add-application-button">
-                                <property name="label">Add Application</property>
-                                <property name="sensitive">0</property>
-                                <property name="focusable">1</property>
-                                <property name="receives-default">1</property>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkButton" id="overrides-add-window-button">
-                                <property name="label" translatable="1">Choose Window</property>
-                                <property name="sensitive">0</property>
-                                <property name="focusable">1</property>
-                                <property name="receives-default">1</property>
-                              </object>
-                            </child>
+                <property name="selection-mode">none</property>
+                <property name="activate-on-single-click">0</property>
+                <child>
+                  <object class="GtkListBoxRow">
+                    <property name="focusable">1</property>
+                    <property name="child">
+                      <object class="GtkBox">
+                        <property name="homogeneous">1</property>
+                        <child>
+                          <object class="GtkButton" id="overrides-add-application-button">
+                            <property name="label">Add Application</property>
+                            <property name="sensitive">1</property>
+                            <property name="focusable">1</property>
+                            <property name="receives-default">1</property>
                           </object>
-                        </property>
+                        </child>
+                        <child>
+                          <object class="GtkButton" id="overrides-add-window-button">
+                            <property name="label" translatable="1">Choose Window</property>
+                            <property name="sensitive">0</property>
+                            <property name="focusable">1</property>
+                            <property name="receives-default">1</property>
+                          </object>
+                        </child>
                       </object>
-                    </child>
+                    </property>
                   </object>
-                </property>
+                </child>
               </object>
             </property>
-          </object>
-        </property>
-        <property name="tab">
-          <object class="GtkLabel">
-            <property name="label" translatable="1">Overrides</property>
           </object>
         </property>
       </object>

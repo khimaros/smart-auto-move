@@ -13,6 +13,7 @@ export const SETTINGS_KEY_FREEZE_SAVES = 'freeze-saves';
 export const SETTINGS_KEY_ACTIVATE_WORKSPACE = 'activate-workspace';
 export const SETTINGS_KEY_IGNORE_POSITION = "ignore-position";
 export const SETTINGS_KEY_IGNORE_WORKSPACE = "ignore-workspace";
+export const SETTINGS_KEY_IGNORE_MONITOR = "ignore-monitor";
 export const SETTINGS_KEY_OVERRIDES = 'overrides';
 
 // sync mode enum values
@@ -30,6 +31,7 @@ export const DEFAULT_FREEZE_SAVES = false;
 export const DEFAULT_ACTIVATE_WORKSPACE = true;
 export const DEFAULT_IGNORE_POSITION = false;
 export const DEFAULT_IGNORE_WORKSPACE = false;
+export const DEFAULT_IGNORE_MONITOR = false;
 
 export function levensteinDistance(a, b) {
 	var m = [], i, j, min = Math.min;
