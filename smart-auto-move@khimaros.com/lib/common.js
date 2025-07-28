@@ -33,6 +33,22 @@ export const DEFAULT_IGNORE_POSITION = false;
 export const DEFAULT_IGNORE_WORKSPACE = false;
 export const DEFAULT_IGNORE_MONITOR = false;
 
+export const SETTINGS_CONFIG = [
+    { name: 'debugLogging',         key: SETTINGS_KEY_DEBUG_LOGGING,      type: 'boolean', default: DEFAULT_DEBUG_LOGGING,      widgetId: 'debug-logging-switch', property: 'active' },
+    { name: 'startupDelayMs',       key: SETTINGS_KEY_STARTUP_DELAY,      type: 'int',     default: DEFAULT_STARTUP_DELAY_MS,     widgetId: 'startup-delay-spin', property: 'value' },
+    { name: 'syncFrequencyMs',      key: SETTINGS_KEY_SYNC_FREQUENCY,     type: 'int',     default: DEFAULT_SYNC_FREQUENCY_MS,    widgetId: 'sync-frequency-spin', property: 'value' },
+    { name: 'saveFrequencyMs',      key: SETTINGS_KEY_SAVE_FREQUENCY,     type: 'int',     default: DEFAULT_SAVE_FREQUENCY_MS,    widgetId: 'save-frequency-spin', property: 'value' },
+    { name: 'matchThreshold',       key: SETTINGS_KEY_MATCH_THRESHOLD,    type: 'double',  default: DEFAULT_MATCH_THRESHOLD,    widgetId: 'match-threshold-spin', property: 'value' },
+    { name: 'syncMode',             key: SETTINGS_KEY_SYNC_MODE,          type: 'enum',    default: DEFAULT_SYNC_MODE,          widgetId: 'sync-mode-combo', property: 'active-id' },
+    { name: 'freezeSaves',          key: SETTINGS_KEY_FREEZE_SAVES,       type: 'boolean', default: DEFAULT_FREEZE_SAVES,       widgetId: 'freeze-saves-switch', property: 'active' },
+    { name: 'activateWorkspace',    key: SETTINGS_KEY_ACTIVATE_WORKSPACE, type: 'boolean', default: DEFAULT_ACTIVATE_WORKSPACE, widgetId: 'activate-workspace-switch', property: 'active' },
+    { name: 'ignorePosition',       key: SETTINGS_KEY_IGNORE_POSITION,    type: 'boolean', default: DEFAULT_IGNORE_POSITION,    widgetId: 'ignore-position-switch', property: 'active' },
+    { name: 'ignoreWorkspace',      key: SETTINGS_KEY_IGNORE_WORKSPACE,   type: 'boolean', default: DEFAULT_IGNORE_WORKSPACE,   widgetId: 'ignore-workspace-switch', property: 'active' },
+    { name: 'ignoreMonitor',        key: SETTINGS_KEY_IGNORE_MONITOR,     type: 'boolean', default: DEFAULT_IGNORE_MONITOR,     widgetId: 'ignore-monitor-switch', property: 'active' },
+    { name: 'overrides',            key: SETTINGS_KEY_OVERRIDES,          type: 'string',  default: () => new Object(), json: true },
+    { name: 'savedWindows',         key: SETTINGS_KEY_SAVED_WINDOWS,      type: 'string',  default: () => new Object(), json: true },
+];
+
 export function levensteinDistance(a, b) {
 	var m = [], i, j, min = Math.min;
 

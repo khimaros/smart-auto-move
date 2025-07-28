@@ -163,77 +163,16 @@ export default class SAMPreferences extends ExtensionPreferences {
 
         /// GENERAL
 
-        let debug_logging_widget = builder.get_object('debug-logging-switch');
-        settings.bind(
-            Common.SETTINGS_KEY_DEBUG_LOGGING,
-            debug_logging_widget,
-            'active',
-            Gio.SettingsBindFlags.DEFAULT
-        );
-
-        let sync_mode_widget = builder.get_object('sync-mode-combo');
-        settings.bind(
-            Common.SETTINGS_KEY_SYNC_MODE,
-            sync_mode_widget,
-            'active-id',
-            Gio.SettingsBindFlags.DEFAULT
-        );
-
-        let match_threshold_widget = builder.get_object('match-threshold-spin');
-        settings.bind(
-            Common.SETTINGS_KEY_MATCH_THRESHOLD,
-            match_threshold_widget,
-            'value',
-            Gio.SettingsBindFlags.DEFAULT
-        );
-
-        let sync_frequency_widget = builder.get_object('sync-frequency-spin');
-        settings.bind(
-            Common.SETTINGS_KEY_SYNC_FREQUENCY,
-            sync_frequency_widget,
-            'value',
-            Gio.SettingsBindFlags.DEFAULT
-        );
-
-        let save_frequency_widget = builder.get_object('save-frequency-spin');
-        settings.bind(
-            Common.SETTINGS_KEY_SAVE_FREQUENCY,
-            save_frequency_widget,
-            'value',
-            Gio.SettingsBindFlags.DEFAULT
-        );
-
-        let freeze_saves_widget = builder.get_object('freeze-saves-switch');
-        settings.bind(
-            Common.SETTINGS_KEY_FREEZE_SAVES,
-            freeze_saves_widget,
-            'active',
-            Gio.SettingsBindFlags.DEFAULT
-        );
-
-        let activate_workspace_widget = builder.get_object('activate-workspace-switch');
-        settings.bind(
-            Common.SETTINGS_KEY_ACTIVATE_WORKSPACE,
-            activate_workspace_widget,
-            'active',
-            Gio.SettingsBindFlags.DEFAULT
-        );
-
-        let ignore_position_widget = builder.get_object('ignore-position-switch');
-        settings.bind(
-            Common.SETTINGS_KEY_IGNORE_POSITION,
-            ignore_position_widget,
-            'active',
-            Gio.SettingsBindFlags.DEFAULT
-        );
-
-        let ignore_workspace_widget = builder.get_object('ignore-workspace-switch');
-        settings.bind(
-            Common.SETTINGS_KEY_IGNORE_WORKSPACE,
-            ignore_workspace_widget,
-            'active',
-            Gio.SettingsBindFlags.DEFAULT
-        );
+        Common.SETTINGS_CONFIG.forEach(c => {
+            if (!c.widgetId) return;
+            const widget = builder.get_object(c.widgetId);
+            settings.bind(
+                c.key,
+                widget,
+                c.property,
+                Gio.SettingsBindFlags.DEFAULT
+            );
+        });
 
         /// SAVED WINDOWS
 

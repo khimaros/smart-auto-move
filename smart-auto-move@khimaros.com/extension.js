@@ -6,49 +6,21 @@ import Meta from "gi://Meta";
 import GLib from "gi://GLib";
 import * as Common from "./lib/common.js";
 
-// settings backed state
-let debugLogging;
-let startupDelayMs;
-let syncFrequencyMs;
-let saveFrequencyMs;
-let matchThreshold;
-let syncMode;
-let freezeSaves;
-let activateWorkspace;
-let ignorePosition;
-let ignoreWorkspace;
-let ignoreMonitor;
-let overrides;
-let savedWindows;
-
 // mutable runtime state
+let state;
+let settingSignals;
 let activeWindows;
 let settings;
 
 // signal descriptors
 let timeoutSyncSignal;
 let timeoutSaveSignal;
-let changedDebugLoggingSignal;
-let changedStartupDelaySignal;
-let changedSyncFrequencySignal;
-let changedSaveFrequencySignal;
-let changedMatchThresholdSignal;
-let changedSyncModeSignal;
-let changedFreezeSavesSignal;
-let changedActivateWorkspaceSignal;
-let changedIgnorePositionSignal;
-let changedIgnoreWorkspaceSignal;
-let changedIgnoreMonitorSignal;
-let changedOverridesSignal;
-let changedSavedWindowsSignal;
 
 //// EXTENSION CLASS
 
 export default class SmartAutoMove extends Extension {
 	constructor(metadata) {
 		super(metadata);
-
-		debug('init()');
 	}
 
 	enable() {
@@ -84,76 +56,51 @@ export default class SmartAutoMove extends Extension {
 function initializeSettings(extension) {
 	settings = extension.getSettings();
 
-	debugLogging = Common.DEFAULT_DEBUG_LOGGING;
-	startupDelayMs = Common.DEFAULT_STARTUP_DELAY_MS;
-	syncFrequencyMs = Common.DEFAULT_SYNC_FREQUENCY_MS;
-	saveFrequencyMs = Common.DEFAULT_SAVE_FREQUENCY_MS;
-	matchThreshold = Common.DEFAULT_MATCH_THRESHOLD;
-	syncMode = Common.DEFAULT_SYNC_MODE;
-	freezeSaves = Common.DEFAULT_FREEZE_SAVES;
-	activateWorkspace = Common.DEFAULT_ACTIVATE_WORKSPACE;
-	ignorePosition = Common.DEFAULT_IGNORE_POSITION;
-	ignoreWorkspace = Common.DEFAULT_IGNORE_WORKSPACE;
-	ignoreMonitor = Common.DEFAULT_IGNORE_MONITOR;
-	overrides = new Object();
-	savedWindows = new Object();
+	state = {};
+	settingSignals = {};
 
-	handleChangedDebugLogging();
+	Common.SETTINGS_CONFIG.forEach(c => {
+		if (typeof c.default === 'function') {
+			state[c.name] = c.default();
+		} else {
+			state[c.name] = c.default;
+		}
+
+		c.handler = createSettingChangedHandler(c);
+	});
+
+	// Manually load debug logging so we can use debug() during startup.
+	state.debugLogging = settings.get_boolean(Common.SETTINGS_KEY_DEBUG_LOGGING);
+	console.log('[smart-auto-move] handleChangedDebugLogging(): ' + state.debugLogging);
 }
 
 function cleanupSettings() {
 	settings = null;
-	debugLogging = null;
-	startupDelayMs = null;
-	syncFrequencyMs = null;
-	saveFrequencyMs = null;
-	matchThreshold = null;
-	syncMode = null;
-	freezeSaves = null;
-	activateWorkspace = null;
-	ignorePosition = null;
-	ignoreWorkspace = null;
-	ignoreMonitor = null;
-	overrides = null;
-	savedWindows = null;
+	state = null;
+	settingSignals = null;
 }
 
 function restoreSettings() {
 	debug('restoreSettings()');
-	handleChangedDebugLogging();
-	handleChangedStartupDelay();
-	handleChangedSyncFrequency();
-	handleChangedSaveFrequency();
-	handleChangedMatchThreshold();
-	handleChangedSyncMode();
-	handleChangedFreezeSaves();
-	handleChangedActivateWorkspace();
-	handleChangedIgnorePosition();
-	handleChangedIgnoreWorkspace();
-	handleChangedIgnoreMonitor();
-	handleChangedOverrides();
-	handleChangedSavedWindows();
+	Common.SETTINGS_CONFIG.forEach(c => c.handler());
 	dumpSavedWindows();
 }
 
 function saveSettings() {
-	settings.set_boolean(Common.SETTINGS_KEY_DEBUG_LOGGING, debugLogging);
-	settings.set_int(Common.SETTINGS_KEY_STARTUP_DELAY, startupDelayMs);
-	settings.set_int(Common.SETTINGS_KEY_SYNC_FREQUENCY, syncFrequencyMs);
-	settings.set_int(Common.SETTINGS_KEY_SAVE_FREQUENCY, saveFrequencyMs);
-	settings.set_double(Common.SETTINGS_KEY_MATCH_THRESHOLD, matchThreshold);
-	settings.set_enum(Common.SETTINGS_KEY_SYNC_MODE, syncMode);
-	settings.set_boolean(Common.SETTINGS_KEY_FREEZE_SAVES, freezeSaves);
-	settings.set_boolean(Common.SETTINGS_KEY_ACTIVATE_WORKSPACE, activateWorkspace);
-	settings.set_boolean(Common.SETTINGS_KEY_IGNORE_POSITION, ignorePosition);
-	settings.set_boolean(Common.SETTINGS_KEY_IGNORE_WORKSPACE, ignoreWorkspace);
-	settings.set_boolean(Common.SETTINGS_KEY_IGNORE_MONITOR, ignoreMonitor);
+	Common.SETTINGS_CONFIG.forEach(c => {
+		if (c.name === 'savedWindows') return;
 
-	let newOverrides = JSON.stringify(overrides);
-	settings.set_string(Common.SETTINGS_KEY_OVERRIDES, newOverrides);
+		const setter = 'set_' + c.type;
+		let value = state[c.name];
+
+		if (c.json) {
+			value = JSON.stringify(value);
+		}
+		settings[setter](c.key, value);
+	});
 
 	let oldSavedWindows = settings.get_string(Common.SETTINGS_KEY_SAVED_WINDOWS);
-	let newSavedWindows = JSON.stringify(savedWindows);
+	let newSavedWindows = JSON.stringify(state.savedWindows);
 	if (oldSavedWindows === newSavedWindows) return;
 	debug('saveSettings()');
 	dumpSavedWindows();
@@ -229,10 +176,10 @@ function pushSavedWindow(win) {
 	let wsh = windowSectionHash(win);
 	//debug('pushSavedWindow() - start: ' + wsh + ', ' + win.get_title());
 	if (wsh === null) return false;
-	if (!savedWindows.hasOwnProperty(wsh))
-		savedWindows[wsh] = new Array();
+	if (!state.savedWindows.hasOwnProperty(wsh))
+		state.savedWindows[wsh] = new Array();
 	let sw = windowData(win);
-	savedWindows[wsh].push(sw);
+	state.savedWindows[wsh].push(sw);
 	debug('pushSavedWindow() - pushed: ' + JSON.stringify(sw));
 	return true;
 }
@@ -240,12 +187,12 @@ function pushSavedWindow(win) {
 function updateSavedWindow(win) {
 	let wsh = windowSectionHash(win);
 	//debug('updateSavedWindow() - start: ' + wsh + ', ' + win.get_title());
-	let [swi, _] = Common.findSavedWindow(savedWindows, wsh, { hash: windowHash(win) }, 1.0);
+	let [swi, _] = Common.findSavedWindow(state.savedWindows, wsh, { hash: windowHash(win) }, 1.0);
 	if (swi === undefined)
 		return false;
 	let sw = windowData(win);
-	if (windowDataEqual(savedWindows[wsh][swi], sw)) return true;
-	savedWindows[wsh][swi] = sw;
+	if (windowDataEqual(state.savedWindows[wsh][swi], sw)) return true;
+	state.savedWindows[wsh][swi] = sw;
 	debug('updateSavedWindow() - updated: ' + swi + ', ' + JSON.stringify(sw));
 	return true;
 }
@@ -253,9 +200,9 @@ function updateSavedWindow(win) {
 function ensureSavedWindow(win) {
 	let wh = windowHash(win);
 
-	if (windowNewerThan(win, startupDelayMs)) return;
+	if (windowNewerThan(win, state.startupDelayMs)) return;
 
-	if (freezeSaves) return;
+	if (state.freezeSaves) return;
 
 	//debug('saveWindow(): ' + windowHash(win);
 	if (!updateSavedWindow(win)) {
@@ -267,9 +214,9 @@ function findOverrideAction(win, threshold) {
 	let wsh = windowSectionHash(win);
 	let sw = windowData(win);
 
-	let action = syncMode;
+	let action = state.syncMode;
 
-	let override = Common.findOverride(overrides, wsh, sw, threshold);
+	let override = Common.findOverride(state.overrides, wsh, sw, threshold);
 
 	if (override !== undefined && override.action !== undefined) action = override.action;
 
@@ -279,16 +226,16 @@ function findOverrideAction(win, threshold) {
 function moveWindow(win, sw) {
 	//debug('moveWindow(): ' + JSON.stringify(sw));
 
-	if (!ignoreMonitor) {
+	if (!state.ignoreMonitor) {
 		win.move_to_monitor(sw.monitor);
 	}
 
 	let ws = global.workspaceManager.get_workspace_by_index(sw.workspace);
-	if (!ignoreWorkspace) {
+	if (!state.ignoreWorkspace) {
 		win.change_workspace(ws);
 	}
 
-	if (ignorePosition) {
+	if (state.ignorePosition) {
 	    let cw = windowData(win);
 	    sw.x = cw.x;
 	    sw.y = cw.y;
@@ -308,7 +255,7 @@ function moveWindow(win, sw) {
 
 	if (sw.on_all_workspaces) win.stick();
 
-	if (activateWorkspace && !ws.active && !ignoreWorkspace) ws.activate(true)
+	if (state.activateWorkspace && !ws.active && !state.ignoreWorkspace) ws.activate(true)
 
 	let nsw = windowData(win);
 
@@ -320,13 +267,13 @@ function restoreWindow(win) {
 
 	let sw;
 
-	let [swi, _] = Common.findSavedWindow(savedWindows, wsh, { hash: windowHash(win), occupied: true }, 1.0);
+	let [swi, _] = Common.findSavedWindow(state.savedWindows, wsh, { hash: windowHash(win), occupied: true }, 1.0);
 
 	if (swi !== undefined) return false;
 
 	if (!windowReady(win)) return true; // try again later
 
-	[swi, sw] = Common.matchedWindow(savedWindows, overrides, wsh, win.get_title(), matchThreshold);
+	[swi, sw] = Common.matchedWindow(state.savedWindows, state.overrides, wsh, win.get_title(), state.matchThreshold);
 
 	if (swi === undefined) return false;
 
@@ -341,13 +288,13 @@ function restoreWindow(win) {
 
 	let nsw = moveWindow(win, sw);
 
-	if (!ignorePosition) {
+	if (!state.ignorePosition) {
 		if (!(sw.x === nsw.x && sw.y === nsw.y)) return true;
 	}
 
 	debug('restoreWindow() - moved: ' + pWinRepr + ' => ' + JSON.stringify(nsw));
 
-	savedWindows[wsh][swi] = nsw;
+	state.savedWindows[wsh][swi] = nsw;
 
 	return true;
 }
@@ -360,8 +307,8 @@ function cleanupWindows() {
 		found.set(windowHash(win), true);
 	});
 
-	Object.keys(savedWindows).forEach(function (wsh) {
-		let sws = savedWindows[wsh];
+	Object.keys(state.savedWindows).forEach(function (wsh) {
+		let sws = state.savedWindows[wsh];
 		sws.forEach(function (sw) {
 			if (sw.occupied && !found.has(sw.hash)) {
 				sw.occupied = false;
@@ -396,11 +343,11 @@ function syncWindows() {
 //// SIGNAL HANDLERS
 
 function handleTimeoutSave() {
-	//debug('handleTimeoutSave(): ' + JSON.stringify(savedWindows));
+	//debug('handleTimeoutSave(): ' + JSON.stringify(state.savedWindows));
 	GLib.Source.remove(timeoutSaveSignal);
 	timeoutSaveSignal = null;
 	saveSettings();
-	timeoutSaveSignal = GLib.timeout_add(GLib.PRIORITY_DEFAULT, saveFrequencyMs, handleTimeoutSave);
+	timeoutSaveSignal = GLib.timeout_add(GLib.PRIORITY_DEFAULT, state.saveFrequencyMs, handleTimeoutSave);
 	return GLib.SOURCE_CONTINUE;
 }
 
@@ -409,73 +356,30 @@ function handleTimeoutSync() {
 	GLib.Source.remove(timeoutSyncSignal);
 	timeoutSyncSignal = null;
 	syncWindows();
-	timeoutSyncSignal = GLib.timeout_add(GLib.PRIORITY_DEFAULT, syncFrequencyMs, handleTimeoutSync);
+	timeoutSyncSignal = GLib.timeout_add(GLib.PRIORITY_DEFAULT, state.syncFrequencyMs, handleTimeoutSync);
 	return GLib.SOURCE_CONTINUE;
 }
 
-function handleChangedDebugLogging() {
-	debugLogging = settings.get_boolean(Common.SETTINGS_KEY_DEBUG_LOGGING);
-	console.log('[smart-auto-move] handleChangedDebugLogging(): ' + debugLogging);
-}
+function createSettingChangedHandler(setting) {
+	return () => {
+		let value;
+		const getter = 'get_' + setting.type;
+		value = settings[getter](setting.key);
 
-function handleChangedStartupDelay() {
-	startupDelayMs = settings.get_int(Common.SETTINGS_KEY_STARTUP_DELAY);
-	debug('handleChangedStartupDelay(): ' + startupDelayMs);
-}
+		if (setting.json) {
+			value = JSON.parse(value);
+		}
+		state[setting.name] = value;
 
-function handleChangedSyncFrequency() {
-	syncFrequencyMs = settings.get_int(Common.SETTINGS_KEY_SYNC_FREQUENCY);
-	debug('handleChangedSyncFrequency(): ' + syncFrequencyMs);
-}
+		const name_upper = setting.name.charAt(0).toUpperCase() + setting.name.slice(1);
+		const msg = `handleChanged${name_upper}(): ` + (setting.json ? JSON.stringify(value) : value);
 
-function handleChangedSaveFrequency() {
-	saveFrequencyMs = settings.get_int(Common.SETTINGS_KEY_SAVE_FREQUENCY);
-	debug('handleChangedSaveFrequency(): ' + saveFrequencyMs);
-}
-
-function handleChangedMatchThreshold() {
-	matchThreshold = settings.get_double(Common.SETTINGS_KEY_MATCH_THRESHOLD);
-	debug('handleChangedMatchThreshold(): ' + matchThreshold);
-}
-
-function handleChangedSyncMode() {
-	syncMode = settings.get_enum(Common.SETTINGS_KEY_SYNC_MODE);
-	debug('handleChangedSyncMode(): ' + syncMode);
-}
-
-function handleChangedFreezeSaves() {
-	freezeSaves = settings.get_boolean(Common.SETTINGS_KEY_FREEZE_SAVES);
-	debug('[smart-auto-move] handleChangedFreezeSaves(): ' + freezeSaves);
-}
-
-function handleChangedActivateWorkspace() {
-	activateWorkspace = settings.get_boolean(Common.SETTINGS_KEY_ACTIVATE_WORKSPACE);
-	debug('[smart-auto-move] handleChangedActivateWorkspace(): ' + activateWorkspace);
-}
-
-function handleChangedIgnorePosition() {
-	ignorePosition = settings.get_boolean(Common.SETTINGS_KEY_IGNORE_POSITION);
-	debug('[smart-auto-move] handleChangedIgnorePosition(): ' + ignorePosition);
-}
-
-function handleChangedIgnoreWorkspace() {
-	ignoreWorkspace = settings.get_boolean(Common.SETTINGS_KEY_IGNORE_WORKSPACE);
-	debug('[smart-auto-move] handleChangedIgnoreWorkspace(): ' + ignoreWorkspace);
-}
-
-function handleChangedIgnoreMonitor() {
-	ignoreMonitor = settings.get_boolean(Common.SETTINGS_KEY_IGNORE_MONITOR);
-	debug('[smart-auto-move] handleChangedIgnoreMonitor(): ' + ignoreMonitor);
-}
-
-function handleChangedOverrides() {
-	overrides = JSON.parse(settings.get_string(Common.SETTINGS_KEY_OVERRIDES));
-	debug('handleChangedOverrides(): ' + JSON.stringify(overrides));
-}
-
-function handleChangedSavedWindows() {
-	savedWindows = JSON.parse(settings.get_string(Common.SETTINGS_KEY_SAVED_WINDOWS));
-	debug('handleChangedSavedWindows(): ' + JSON.stringify(savedWindows));
+		if (setting.name === 'debugLogging') {
+			console.log('[smart-auto-move] ' + msg);
+		} else {
+			debug(msg);
+		}
+	}
 }
 
 //// SIGNAL HELPERS
@@ -492,8 +396,8 @@ function disconnectSignals() {
 }
 
 function addTimeouts() {
-	timeoutSyncSignal = GLib.timeout_add(GLib.PRIORITY_DEFAULT, syncFrequencyMs, handleTimeoutSync);
-	timeoutSaveSignal = GLib.timeout_add(GLib.PRIORITY_DEFAULT, saveFrequencyMs, handleTimeoutSave);
+	timeoutSyncSignal = GLib.timeout_add(GLib.PRIORITY_DEFAULT, state.syncFrequencyMs, handleTimeoutSync);
+	timeoutSaveSignal = GLib.timeout_add(GLib.PRIORITY_DEFAULT, state.saveFrequencyMs, handleTimeoutSave);
 }
 
 function removeTimeouts() {
@@ -505,39 +409,18 @@ function removeTimeouts() {
 }
 
 function connectSettingChangedSignals() {
-	changedDebugLoggingSignal = settings.connect('changed::' + Common.SETTINGS_KEY_DEBUG_LOGGING, handleChangedDebugLogging);
-	changedStartupDelaySignal = settings.connect('changed::' + Common.SETTINGS_KEY_STARTUP_DELAY, handleChangedStartupDelay);
-	changedSyncFrequencySignal = settings.connect('changed::' + Common.SETTINGS_KEY_SYNC_FREQUENCY, handleChangedSyncFrequency);
-	changedSaveFrequencySignal = settings.connect('changed::' + Common.SETTINGS_KEY_SAVE_FREQUENCY, handleChangedSaveFrequency);
-	changedMatchThresholdSignal = settings.connect('changed::' + Common.SETTINGS_KEY_MATCH_THRESHOLD, handleChangedMatchThreshold);
-	changedSyncModeSignal = settings.connect('changed::' + Common.SETTINGS_KEY_SYNC_MODE, handleChangedSyncMode);
-	changedFreezeSavesSignal = settings.connect('changed::' + Common.SETTINGS_KEY_FREEZE_SAVES, handleChangedFreezeSaves);
-	changedActivateWorkspaceSignal = settings.connect('changed::' + Common.SETTINGS_KEY_ACTIVATE_WORKSPACE, handleChangedActivateWorkspace);
-	changedIgnorePositionSignal = settings.connect('changed::' + Common.SETTINGS_KEY_IGNORE_POSITION, handleChangedIgnorePosition);
-	changedIgnoreWorkspaceSignal = settings.connect('changed::' + Common.SETTINGS_KEY_IGNORE_WORKSPACE, handleChangedIgnoreWorkspace);
-	changedIgnoreMonitorSignal = settings.connect('changed::' + Common.SETTINGS_KEY_IGNORE_MONITOR, handleChangedIgnoreMonitor);
-	changedOverridesSignal = settings.connect('changed::' + Common.SETTINGS_KEY_OVERRIDES, handleChangedOverrides);
-	changedSavedWindowsSignal = settings.connect('changed::' + Common.SETTINGS_KEY_SAVED_WINDOWS, handleChangedSavedWindows);
+	Common.SETTINGS_CONFIG.forEach(c => {
+		settingSignals[c.name] = settings.connect('changed::' + c.key, c.handler);
+	});
 }
 
 function disconnectSettingChangedSignals() {
-	settings.disconnect(changedDebugLoggingSignal);
-	settings.disconnect(changedStartupDelaySignal);
-	settings.disconnect(changedSyncFrequencySignal);
-	settings.disconnect(changedSaveFrequencySignal);
-	settings.disconnect(changedMatchThresholdSignal);
-	settings.disconnect(changedSyncModeSignal);
-	settings.disconnect(changedOverridesSignal);
-	settings.disconnect(changedSavedWindowsSignal);
-
-	changedDebugLoggingSignal = null;
-	changedStartupDelaySignal = null;
-	changedSyncFrequencySignal = null;
-	changedSaveFrequencySignal = null;
-	changedMatchThresholdSignal = null;
-	changedSyncModeSignal = null;
-	changedOverridesSignal = null;
-	changedSavedWindowsSignal = null;
+	Common.SETTINGS_CONFIG.forEach(c => {
+		if (settingSignals[c.name]) {
+			settings.disconnect(settingSignals[c.name]);
+			settingSignals[c.name] = null;
+		}
+	});
 }
 
 //// DEBUG UTILITIES
@@ -547,14 +430,14 @@ function info(message) {
 }
 
 function debug(message) {
-	if (debugLogging) {
+	if (state && state.debugLogging) {
 		info(message);
 	}
 }
 
 function dumpSavedWindows() {
-	Object.keys(savedWindows).forEach(function (wsh) {
-		let sws = savedWindows[wsh];
+	Object.keys(state.savedWindows).forEach(function (wsh) {
+		let sws = state.savedWindows[wsh];
 		debug('dumpSavedwindows(): ' + wsh + ' ' + JSON.stringify(sws));
 	});
 }

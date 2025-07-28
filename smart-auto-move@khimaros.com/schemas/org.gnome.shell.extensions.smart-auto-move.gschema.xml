@@ -66,7 +66,7 @@
     </key>
     <key name="ignore-monitor" type="b">
       <default>false</default>
-      <summary>Ignore Monitor</summary>
+      <summary>Ignore monitor</summary>
       <description>Do not restore windows' monitor.</description>
     </key>
   </schema>

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## version 35
+
+- persist the "Ignore Monitor" setting
+- DRY the code around setting management and signals
+- add "Startup Delay" setting
+
 ## version 34
 
 - fix a crash when adjusting override threshold
