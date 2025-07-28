@@ -18,14 +18,14 @@ const ApplicationChooserDialog = GObject.registerClass({
         },
     },
 }, class ApplicationChooserDialog extends Adw.Window {
-    _init(parent) {
+    _init(props) {
         super._init({
             modal: true,
-            transient_for: parent.get_root(),
             title: 'Add Application Override',
             width_request: 450,
             height_request: 600,
             destroy_with_parent: true,
+            ...props,
         });
 
         const box = new Gtk.Box({
@@ -275,7 +275,7 @@ export default class SAMPreferences extends ExtensionPreferences {
         let overrides_list_widget = builder.get_object('overrides-listbox');
         let overrides_add_application_widget = builder.get_object('overrides-add-application-button');
         overrides_add_application_widget.connect('clicked', () => {
-            const dialog = new ApplicationChooserDialog(window);
+            const dialog = new ApplicationChooserDialog({ transient_for: window.get_root() });
             dialog.connect('response', (_source, appId) => {
                 if (appId) {
                     if (appId.endsWith('.desktop')) {
@@ -358,7 +358,10 @@ function loadOverridesSetting(extension, list_widget, list_objects) {
                 if (threshold <= 0.01) threshold = undefined;
                 //console.log('SPIN THRESHOLD CHANGED: ' + threshold);
                 wshos[oi].threshold = threshold;
-                settings.set_string(Common.SETTINGS_KEY_OVERRIDES, JSON.stringify(overrides));
+                GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+                    settings.set_string(Common.SETTINGS_KEY_OVERRIDES, JSON.stringify(overrides));
+                    return GLib.SOURCE_REMOVE;
+                });
             });
 
             let action_widget = row_templates._override_action_combo
@@ -369,7 +372,10 @@ function loadOverridesSetting(extension, list_widget, list_objects) {
                 if (action === 2) action = undefined;
                 //console.log('COMBO CHANGED ACTIVE: ' + combo.get_active());
                 wshos[oi].action = action;
-                settings.set_string(Common.SETTINGS_KEY_OVERRIDES, JSON.stringify(overrides));
+                GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+                    settings.set_string(Common.SETTINGS_KEY_OVERRIDES, JSON.stringify(overrides));
+                    return GLib.SOURCE_REMOVE;
+                });
             });
 
             let delete_widget = row_templates._override_delete_button;
@@ -377,7 +383,10 @@ function loadOverridesSetting(extension, list_widget, list_objects) {
                 //console.log('DELETE OVERRIDE: ' + JSON.stringify(o));
                 wshos.splice(oi, 1);
                 if (wshos.length < 1) delete (overrides[wsh]);
-                settings.set_string(Common.SETTINGS_KEY_OVERRIDES, JSON.stringify(overrides));
+                GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+                    settings.set_string(Common.SETTINGS_KEY_OVERRIDES, JSON.stringify(overrides));
+                    return GLib.SOURCE_REMOVE;
+                });
             });
 
             list_widget.append(row);

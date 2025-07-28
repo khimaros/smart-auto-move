@@ -1,6 +1,10 @@
 # CHANGELOG
 
-## version 32
+## version 34
+
+- fix a crash when adjusting override threshold
+
+## version 33
 
 - prepare for internationalization
 - add search/filter for saved windows
