@@ -1,5 +1,32 @@
 # CHANGELOG
 
+## version 36
+
+### New Features
+
+- huge refactor to use event driven rather than timeout driven tracking
+- fixed issues with windows which change their titles after startup
+- better handling of multi-monitor
+- track last seen and first seen times for each window
+- automatic cleanup of old/unseen saved windows
+- "Choose Window" button implemented
+
+### Breaking Changes
+
+**⚠️ IMPORTANT: Automatic Migration from v35**
+
+When upgrading from v35 or earlier, the extension will automatically:
+- **Clear all saved window positions** - The internal data structure has changed significantly and cannot be automatically converted
+- **Preserve your overrides** - Window and application overrides (IGNORE/RESTORE rules and thresholds) will be migrated automatically
+- **Preserve all settings** - Global preferences like sync mode, match threshold, and ignore options are maintained
+
+Your saved windows will be re-learned as you use applications after the upgrade. If you had many windows configured, you may want to open and position them again to rebuild the saved state.
+
+**Data Structure Changes:**
+- Internal saved windows format completely redesigned for the new event-driven architecture
+- New `config-version` setting added to track data format versions for future migrations
+- Configuration timing parameters changed from `startup-delay`/`sync-frequency`/`save-frequency` to new event-driven parameters
+
 ## version 35
 
 - persist the "Ignore Monitor" setting

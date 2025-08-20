@@ -26,9 +26,9 @@ the first step is to choose your **Default Synchronization Mode**: `IGNORE` or `
 
 next is to choose your global **Match Threshold**, the default works well for most use cases. a number closer to `0.0` will match windows with less similar attributes, whereas `1.0` requires an exact match.
 
-advanced users can also tune extension resource usage. adjust **Sync Frequency** (memory and CPU) and **Save Frequency** (disk I/O).
+advanced users can tune window matching behavior with parameters like **New Window Max Wait Time**, **Title Stability**, and other timing settings in the preferences.
 
-after you've dialed in your overrides, the learning apparatus can be paused. enable **Freeze Saves** to prevent changes to Saved Windows. N.B. this lose track of windows if their titles change.
+after you've dialed in your overrides, the learning apparatus can be paused. enable **Freeze Saves** to prevent changes to Saved Windows. N.B. this will lose track of windows if their titles change.
 
 ### overrides
 
@@ -43,6 +43,18 @@ after you've created an override, visit the **Overrides** tab.
 you can change the IGNORE/RESTORE behavior here for apps and windows.
 
 for applications, a custom **Match Threshold** can be set.
+
+## upgrading
+
+### upgrading from v35 or earlier
+
+when upgrading from version 35 or earlier to version 36+, the extension will automatically migrate your settings:
+
+- **saved window positions are cleared** - the internal data format has changed significantly and cannot be converted automatically. your windows will be re-learned as you use them.
+- **overrides are preserved** - all your IGNORE/RESTORE rules and custom thresholds will be migrated automatically.
+- **settings are preserved** - global preferences remain unchanged.
+
+no manual intervention is required. the migration happens automatically on first load.
 
 ## limitations
 
@@ -84,10 +96,10 @@ set the minimum window/title match threshold to 50%:
 $ dconf write /org/gnome/shell/extensions/smart-auto-move/match-threshold 0.5
 ```
 
-set the window synchronization (update/restore) frequency to 50ms:
+set the maximum wait time for new window title stabilization to 15 seconds:
 
 ```
-$ dconf write /org/gnome/shell/extensions/smart-auto-move/sync-frequency 50
+$ dconf write /org/gnome/shell/extensions/smart-auto-move/new-window-max-wait-ms 15000
 ```
 
 default to ignoring windows unless explicitly defined. restore all windows of the gnome-calculator app, all firefox windows except for the profile chooser, and Nautilus only if the window title is "Downloads":

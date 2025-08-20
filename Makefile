@@ -1,43 +1,45 @@
-pack: smart-auto-move@khimaros.com.shell-extension.zip
-.PHONY: pack
+NAME = smart-auto-move
+UUID = $(NAME)@khimaros.com
+
+build:
+	mkdir -p build/
+	gnome-extensions pack -f \
+		--extra-source=metadata.json \
+		--extra-source=extension.js \
+		--extra-source=prefs.js \
+		--extra-source=common.js \
+		--extra-source=migrations.js \
+		--extra-source=lib/ \
+		--extra-source=ui/ \
+		-o build/
+.PHONY: build
 
 clean:
-	rm -f ./smart-auto-move@khimaros.com.shell-extension.zip ./smart-auto-move@khimaros.com/schemas/gschemas.compiled
+	rm -rf ./build/ ./src/schemas/gschemas.compiled
 .PHONY: clean
 
-smart-auto-move@khimaros.com.shell-extension.zip: schemas ui ./smart-auto-move@khimaros.com/*
-	gnome-extensions pack --force --extra-source=./lib/ --extra-source=./ui/ ./smart-auto-move@khimaros.com/
+install: uninstall build
+	gnome-extensions install -f build/$(UUID).shell-extension.zip
+.PHONY: install
 
-smart-auto-move@khimaros.com/schemas/gschemas.compiled: smart-auto-move@khimaros.com/schemas/*.gschema.xml
-	glib-compile-schemas ./smart-auto-move@khimaros.com/schemas/
+uninstall:
+	rm -rf  $(HOME)/.local/share/gnome-shell/extensions/$(UUID)
+.PHONY: uninstall
 
-schemas: smart-auto-move@khimaros.com/schemas/gschemas.compiled
+schemas: schemas/gschemas.compiled
 .PHONY: schemas
 
-ui: smart-auto-move@khimaros.com/ui/prefs-gtk4.ui smart-auto-move@khimaros.com/ui/templates-gtk4.ui
-.PHONY: ui
-
-test:
-	gjs -m -I smart-auto-move@khimaros.com/lib/ ./smart-auto-move@khimaros.com/test/common.test.js
-.PHONY: test
+schemas/gschemas.compiled: schemas/*.gschema.xml
+	glib-compile-schemas ./schemas/
 
 log:
 	journalctl -f /usr/bin/gnome-shell /usr/bin/gjs
 .PHONY: log
-
-install: smart-auto-move@khimaros.com.shell-extension.zip
-	#rsync -av ./smart-auto-move@khimaros.com/ $(HOME)/.local/share/gnome-shell/extensions/smart-auto-move@khimaros.com/
-	gnome-extensions install --force $<
-.PHONY: install
-
-uninstall:
-	rm -rf $(HOME)/.local/share/gnome-shell/extensions/smart-auto-move@khimaros.com/
-.PHONY: uninstall
 
 start: install
 	MUTTER_DEBUG_DUMMY_MODE_SPECS=1600x900 dbus-run-session -- gnome-shell --nested --wayland
 .PHONY: start
 
 start-prefs: install
-	gnome-extensions prefs smart-auto-move@khimaros.com
+	gnome-extensions prefs $(UUID)
 .PHONY: start-prefs

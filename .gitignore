@@ -1,4 +1,6 @@
-smart-auto-move@khimaros.com.shell-extension.zip
+/build
 smart-auto-move.dconf
 *.ui~
-/.aider*
+AGENTS.md
+CLAUDE.md
+GEMINI.md

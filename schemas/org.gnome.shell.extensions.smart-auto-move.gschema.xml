@@ -14,26 +14,56 @@
       <summary>Debug Logging</summary>
       <description>Write detailed logs about extension behavior.</description>
     </key>
-    <key name="startup-delay" type="i">
-      <default>2500</default>
-      <summary>Startup Delay (ms)</summary>
-      <description>Period of time in milliseconds to wait between seeing a window and writing it to the in-memory store.</description>
+    <key name="config-version" type="i">
+      <default>0</default>
+      <summary>Configuration Format Version</summary>
+      <description>Internal version number for configuration data format. Used for automatic migration between versions.</description>
     </key>
-    <key name="sync-frequency" type="i">
-      <default>100</default>
-      <summary>Sync Frequency (ms)</summary>
-      <description>Frequency in milliseconds to synchronize changes to active windows into the in-memory store.</description>
+
+    <key name="new-window-max-wait-ms" type="i">
+      <default>10000</default>
+      <summary>New Window Max Wait Time (ms)</summary>
+      <description>The maximum time to wait for a new window's title to be finalized. After this period, the window will be processed even if its title is still changing.</description>
     </key>
-    <key name="save-frequency" type="i">
-      <default>1000</default>
-      <summary>Save Frequency (ms)</summary>
-      <description>Frequency in milliseconds to persist the in-memory store to disk.</description>
+    <key name="new-window-title-stability-ms" type="i">
+      <default>500</default>
+      <summary>New Window Title Stability (ms)</summary>
+      <description>The time a new window's title must remain unchanged before it is considered stable and ready for processing.</description>
+    </key>
+    <key name="generic-title-max-length" type="i">
+      <default>15</default>
+      <summary>Generic Title Max Length</summary>
+      <description>Maximum length for a title to be considered generic. Generic titles get extended wait times.</description>
+    </key>
+
+    <key name="ambiguity-threshold" type="d">
+      <default>0.99</default>
+      <summary>Ambiguity Threshold</summary>
+      <description>Similarity threshold above which windows with specific titles are considered ambiguous.</description>
+    </key>
+
+    <key name="min-score-spread" type="d">
+      <default>0.6</default>
+      <summary>Minimum Score Spread</summary>
+      <description>Minimum difference between best and second-best match scores for confident matching.</description>
+    </key>
+
+    <key name="generic-title-extended-wait" type="i">
+      <default>10000</default>
+      <summary>Generic Title Extended Wait (ms)</summary>
+      <description>Extended wait time for windows with generic titles before forcing a decision.</description>
+    </key>
+    <key name="max-unseen-age" type="i">
+      <default>604800</default>
+      <summary>Max Unseen Age (seconds)</summary>
+      <description>Maximum age in seconds of a window that has not been seen before it is deleted.</description>
     </key>
     <key name="match-threshold" type="d">
       <default>0.7</default>
       <summary>Match Threshold</summary>
       <description>Minimum threshold for matching restored windows.</description>
     </key>
+
     <key name="sync-mode" enum="org.gnome.shell.extensions.smart-auto-move.sync-mode-enum">
       <default>'RESTORE'</default>
       <summary>Sync Mode</summary>

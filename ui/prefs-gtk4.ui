@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="adw" version="1.0"/>
+  <object class="GtkAdjustment" id="match-threshold-adjustment">
+    <property name="upper">1</property>
+    <property name="step-increment">0.05</property>
+    <property name="page-increment">0.10</property>
+  </object>
+   <object class="GtkAdjustment" id="max-unseen-age-adjustment">
+     <property name="lower">60</property>
+     <property name="upper">2592000</property>
+     <property name="step-increment">60</property>
+     <property name="page-increment">600</property>
+   </object>
+   <object class="GtkAdjustment" id="new-window-max-wait-adjustment">
+     <property name="lower">0</property>
+     <property name="upper">10000</property>
+    <property name="step-increment">100</property>
+    <property name="page-increment">1000</property>
+  </object>
+  <object class="GtkAdjustment" id="new-window-title-stability-adjustment">
+    <property name="lower">0</property>
+    <property name="upper">5000</property>
+    <property name="step-increment">50</property>
+    <property name="page-increment">500</property>
+  </object>
+   <object class="GtkAdjustment" id="generic-title-max-length-adjustment">
+     <property name="lower">5</property>
+     <property name="upper">50</property>
+     <property name="step-increment">1</property>
+     <property name="page-increment">5</property>
+   </object>
+   <object class="GtkAdjustment" id="ambiguity-threshold-generic-adjustment">
+     <property name="lower">0.5</property>
+     <property name="upper">1.0</property>
+     <property name="step-increment">0.01</property>
+     <property name="page-increment">0.05</property>
+   </object>
+   <object class="GtkAdjustment" id="min-score-spread-adjustment">
+     <property name="lower">0.1</property>
+     <property name="upper">1.0</property>
+     <property name="step-increment">0.05</property>
+     <property name="page-increment">0.1</property>
+   </object>
+   <object class="GtkAdjustment" id="generic-title-extended-wait-adjustment">
+     <property name="lower">1000</property>
+     <property name="upper">15000</property>
+    <property name="step-increment">100</property>
+    <property name="page-increment">1000</property>
+  </object>
+  <object class="AdwPreferencesPage" id="general-page">
+    <property name="title" translatable="yes">General</property>
+    <property name="icon-name">dialog-information-symbolic</property>
+    <child>
+      <object class="AdwPreferencesGroup">
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Debug Logging</property>
+            <property name="subtitle" translatable="yes">Write detailed logs about extension behavior.</property>
+            <child>
+              <object class="GtkSwitch" id="debug-logging-switch">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Default Synchronization Mode</property>
+            <property name="subtitle" translatable="yes">Default mode when synchronizing windows.</property>
+            <child>
+              <object class="GtkComboBoxText" id="sync-mode-combo">
+                <property name="valign">center</property>
+                <items>
+                  <item id="IGNORE" translatable="yes">IGNORE</item>
+                  <item id="RESTORE" translatable="yes">RESTORE</item>
+                </items>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Default Match Threshold</property>
+            <property name="subtitle" translatable="yes">Default minimum threshold for matching restored windows.</property>
+            <child>
+              <object class="GtkSpinButton" id="match-threshold-spin">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+                <property name="adjustment">match-threshold-adjustment</property>
+                <property name="climb-rate">0.10</property>
+                <property name="digits">2</property>
+                <property name="numeric">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+         <child>
+           <object class="AdwActionRow">
+             <property name="title" translatable="yes">Max Unseen Age (seconds)</property>
+             <property name="subtitle" translatable="yes">Maximum age in seconds of a window that has not been seen before it is deleted.</property>
+             <child>
+               <object class="GtkSpinButton" id="max-unseen-age-spin">
+                 <property name="focusable">1</property>
+                 <property name="valign">center</property>
+                 <property name="adjustment">max-unseen-age-adjustment</property>
+                 <property name="numeric">1</property>
+               </object>
+             </child>
+           </object>
+         </child>
+         <child>
+           <object class="AdwActionRow">
+             <property name="title" translatable="yes">New Window Max Wait Time (milliseconds)</property>
+             <property name="subtitle" translatable="yes">The maximum time to wait for a new window's title to be finalized. After this period, the window will be processed even if its title is still changing.</property>
+            <child>
+              <object class="GtkSpinButton" id="new-window-max-wait-spin">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+                <property name="adjustment">new-window-max-wait-adjustment</property>
+                <property name="numeric">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">New Window Title Stability (milliseconds)</property>
+            <property name="subtitle" translatable="yes">The time a new window's title must remain unchanged before it is considered stable and ready for processing.</property>
+            <child>
+              <object class="GtkSpinButton" id="new-window-title-stability-spin">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+                <property name="adjustment">new-window-title-stability-adjustment</property>
+                <property name="numeric">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Freeze Saves</property>
+            <property name="subtitle" translatable="yes">Do not update saved window data.</property>
+            <child>
+              <object class="GtkSwitch" id="freeze-saves-switch">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Activate Workspace</property>
+            <property name="subtitle" translatable="yes">Follow apps when they are moved to another workspace.</property>
+            <child>
+              <object class="GtkSwitch" id="activate-workspace-switch">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Ignore Position</property>
+            <property name="subtitle" translatable="yes">Do not restore windows' position.</property>
+            <child>
+              <object class="GtkSwitch" id="ignore-position-switch">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Ignore Workspace</property>
+            <property name="subtitle" translatable="yes">Do not restore windows' workspace.</property>
+            <child>
+              <object class="GtkSwitch" id="ignore-workspace-switch">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Ignore Monitor</property>
+            <property name="subtitle" translatable="yes">Do not restore windows' monitor.</property>
+            <child>
+              <object class="GtkSwitch" id="ignore-monitor-switch">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="AdwPreferencesGroup">
+        <property name="title" translatable="yes">Advanced Window Matching</property>
+        <property name="description" translatable="yes">Fine-tune the sophisticated window matching algorithm</property>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Generic Title Max Length</property>
+            <property name="subtitle" translatable="yes">Maximum length for a title to be considered generic. Generic titles get extended wait times.</property>
+            <child>
+              <object class="GtkSpinButton" id="generic-title-max-length-spin">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+                <property name="adjustment">generic-title-max-length-adjustment</property>
+                <property name="numeric">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Ambiguity Threshold</property>
+            <property name="subtitle" translatable="yes">Similarity threshold above which windows with specific titles are considered ambiguous.</property>
+            <child>
+              <object class="GtkSpinButton" id="ambiguity-threshold-generic-spin">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+                <property name="adjustment">ambiguity-threshold-generic-adjustment</property>
+                <property name="climb-rate">0.01</property>
+                <property name="digits">2</property>
+                <property name="numeric">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Minimum Score Spread</property>
+            <property name="subtitle" translatable="yes">Minimum difference between best and second-best match scores for confident matching.</property>
+            <child>
+              <object class="GtkSpinButton" id="min-score-spread-spin">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+                <property name="adjustment">min-score-spread-adjustment</property>
+                <property name="climb-rate">0.05</property>
+                <property name="digits">2</property>
+                <property name="numeric">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwActionRow">
+            <property name="title" translatable="yes">Generic Title Extended Wait (ms)</property>
+            <property name="subtitle" translatable="yes">Extended wait time for windows with generic titles before forcing a decision.</property>
+            <child>
+              <object class="GtkSpinButton" id="generic-title-extended-wait-spin">
+                <property name="focusable">1</property>
+                <property name="valign">center</property>
+                <property name="adjustment">generic-title-extended-wait-adjustment</property>
+                <property name="numeric">1</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="AdwPreferencesPage" id="saved-windows-page">
+    <property name="title" translatable="yes">Saved Windows</property>
+    <property name="icon-name">computer-fail-symbolic</property>
+    <child>
+      <object class="AdwPreferencesGroup">
+        <child>
+          <object class="GtkBox">
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkBox">
+                <property name="homogeneous">1</property>
+                <property name="margin-start">12</property>
+                <property name="margin-end">12</property>
+                <property name="margin-top">12</property>
+                <child>
+                  <object class="GtkButton" id="saved-windows-cleanup-button">
+                    <property name="label" translatable="1">Cleanup Non-occupied Windows</property>
+                    <property name="focusable">1</property>
+                    <property name="receives-default">1</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSearchEntry" id="saved-windows-filter-entry">
+                <property name="margin-start">12</property>
+                <property name="margin-end">12</property>
+                <property name="margin-top">12</property>
+                <property name="margin-bottom">12</property>
+                <property name="placeholder-text" translatable="yes">Search...</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkScrolledWindow">
+                <property name="focusable">1</property>
+                <property name="hexpand">1</property>
+                <property name="vexpand">1</property>
+                <property name="child">
+                  <object class="GtkViewport">
+                    <property name="hexpand">1</property>
+                    <property name="vexpand">1</property>
+                    <property name="child">
+                      <object class="GtkListBox" id="saved-windows-listbox">
+                        <property name="hexpand">1</property>
+                        <property name="vexpand">1</property>
+                        <property name="selection-mode">none</property>
+                        <property name="activate-on-single-click">0</property>
+                      </object>
+                    </property>
+                  </object>
+                </property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="AdwPreferencesPage" id="overrides-page">
+    <property name="title" translatable="yes">Overrides</property>
+    <property name="icon-name">preferences-system-symbolic</property>
+    <child>
+      <object class="AdwPreferencesGroup">
+        <child>
+          <object class="GtkScrolledWindow">
+            <property name="focusable">1</property>
+            <property name="hexpand">1</property>
+            <property name="vexpand">1</property>
+            <property name="child">
+              <object class="GtkViewport">
+                <property name="hexpand">1</property>
+                <property name="vexpand">1</property>
+                <property name="child">
+                  <object class="GtkListBox" id="overrides-listbox">
+                    <property name="hexpand">1</property>
+                    <property name="vexpand">1</property>
+                    <property name="selection-mode">none</property>
+                    <property name="activate-on-single-click">0</property>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="focusable">1</property>
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="homogeneous">1</property>
+                            <child>
+                              <object class="GtkButton" id="overrides-add-application-button">
+                                <property name="label">Add Application</property>
+                                <property name="sensitive">1</property>
+                                <property name="focusable">1</property>
+                                <property name="receives-default">1</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="overrides-add-window-button">
+                                <property name="label" translatable="1">Choose Window</property>
+                                <property name="sensitive">1</property>
+                                <property name="focusable">1</property>
+                                <property name="receives-default">1</property>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                  </object>
+                </property>
+              </object>
+            </property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
