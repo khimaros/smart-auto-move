@@ -6,5 +6,5 @@
   "settings-schema": "org.gnome.shell.extensions.smart-auto-move",
   "original-author": "khimaros",
   "shell-version": ["49"],
-  "version": "39"
+  "version": "40"
 }

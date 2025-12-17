@@ -300,7 +300,6 @@ export default class SAMPreferences extends ExtensionPreferences {
       "saved-windows-cleanup-button",
     );
     saved_windows_cleanup_widget.connect("clicked", () => {
-      //console.log('CLEANUP BUTTON CLICKED');
       deleteNonOccupiedWindows(this);
     });
 
