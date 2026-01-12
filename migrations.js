@@ -3,7 +3,7 @@
 import { debug } from "./lib/utils.js";
 import { parseOverrides, SYNC_MODE_IGNORE, SYNC_MODE_RESTORE } from "./common.js";
 
-export const CURRENT_CONFIG_VERSION = 36;
+export const CURRENT_CONFIG_VERSION = 37;
 
 // Convert action values from numbers (0/1) to strings ("IGNORE"/"RESTORE")
 function normalizeActionToString(action) {
@@ -62,6 +62,14 @@ export function migrateSettings(settings) {
     settings.set_string("overrides", JSON.stringify(overrides));
 
     debug("migrations", "Migration complete: saved windows cleared, overrides converted to new format");
+  }
+
+  if (configVersion < 37) {
+    // v37: Added LIFO connector preference for monitor selection
+    // Clear saved windows since old configs don't have connectorPreference field
+    // and monitor selection behavior has changed
+    settings.set_string("saved-windows", "{}");
+    debug("migrations", "Migration v37: saved windows cleared for connector preference feature");
   }
 
   settings.set_int("config-version", CURRENT_CONFIG_VERSION);

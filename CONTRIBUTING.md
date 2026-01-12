@@ -29,66 +29,6 @@ see commit 9edd9e3210a1541d5c2915943c7a2b238ce7a856 for an end-to-end example.
 1. upload the zip to extensions.gnome.org
 1. repeat as needed if a version is rejected
 
-## manual tests
+## testing
 
-- disable the extension
-- reset the dconf settings
-- enable the extension
-- open calculator, move, resize, close, reopen (should restore)
-- open extension settings
-- switch default sync to IGNORE
-- open calculator, move, close, reopen (should NOT restore)
-- add an app override for calculator
-- set calculator override sync mode to RESTORE
-- click spin button down to 0.10 threshold
-- open calculator, move, close, reopen (should restore)
-- open nautilus, move, close, reopen (should NOT restore)
-- add an app override for firefox
-- open three firefox windows with three different websites
-- tile one per workspace, menu -> quit, reopen (all should restore)
-- switch tabs on one of the windows, menu -> quit, reopen (all should restore)
-- add app override for terminal
-- open three terminals and move them to slightly different locations
-- close and reopen terminals in a random order and make sure they fill open slots
-
-## archive
-
-### calculator
-
-- open calculator
-- move calculator position
-- resize calculator
-- close calculator
-- open calculator
-- quickly close calculator
-- open calculator
-
-### files
-
-- open Places => Home
-- open a second Places => Home
-- tile first window to the left
-- move second Home window
-- close first Home window
-- change second Home window to Downloads
-- close Downloads window
-- open Places -> Downloads
-- open Places -> Home
-- move Downloads to workspace 2
-- tile Downloads to the right
-
-### firefox
-
-- launch firefox
-- navigate to Wikipedia.org
-- open second window
-- navigate to Mozilla.org
-- move first window to workspace 2
-- tile first window to left
-- tile second window to right
-- firefox Menu -> Quit
-- launch firefox
-- open new tab in Mozilla window
-- navigate to Google.com
-- firefox Menu -> Quit
-- launch firefox
+see TESTING.md
