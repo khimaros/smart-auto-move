@@ -32,6 +32,14 @@ schemas: schemas/gschemas.compiled
 schemas/gschemas.compiled: schemas/*.gschema.xml
 	glib-compile-schemas ./schemas/
 
+test-e2e: build
+	scripts/vm-test.sh install
+	scripts/vm-test.sh logout
+	sleep 5
+	VM_EXEC_TIMEOUT=600 scripts/vm-test.sh user-shell \
+		"cd /srv/smart-auto-move/tests && python3 -m pytest -v -s --tb=short -p no:cacheprovider . 2>&1"
+.PHONY: test-e2e
+
 log:
 	journalctl -f /usr/bin/gnome-shell /usr/bin/gjs
 .PHONY: log

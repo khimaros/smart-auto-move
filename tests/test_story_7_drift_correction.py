@@ -182,6 +182,7 @@ def test_drift_correction_multiple_restarts():
     try:
         win = find_windowbot_window(client)
         assert win is not None
+        wait_for_settle(1.0)
 
         tile_window(client, win.id, TilePosition.RIGHT, primary)
         wait_for_settle(3.0)
@@ -245,6 +246,7 @@ def test_drift_correction_left_tile():
     try:
         win = find_windowbot_window(client)
         assert win is not None
+        wait_for_settle(1.0)
 
         tile_window(client, win.id, TilePosition.LEFT, primary)
         wait_for_settle(3.0)
