@@ -32,7 +32,7 @@ schemas: schemas/gschemas.compiled
 schemas/gschemas.compiled: schemas/*.gschema.xml
 	glib-compile-schemas ./schemas/
 
-test-e2e: build
+test-e2e:
 	scripts/vm-test.sh install
 	scripts/vm-test.sh logout
 	sleep 5

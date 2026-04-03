@@ -10,4 +10,5 @@
     eg. https://schneegans.github.io/tutorials/2022/03/02/gnome-shell-extensions-ci-03
 [x] multi-monitor support
 [x] fix TRACKING windows incorrectly migrated to different slot on title change
+[x] fix TRACKING windows swapping positions on monitors-changed (lock/unlock)
 ```
