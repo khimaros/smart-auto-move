@@ -62,8 +62,8 @@ def test_extension_reinit_no_swap():
     # setup: single monitor
     log(">>> setup: clean state, single monitor")
     ext_state.clear_all()
-    client.set_monitor_enabled("Virtual-2", False)
     client.set_monitor_enabled("Virtual-3", False)
+    client.set_monitor_enabled("Virtual-2", False)
     wait_for_settle(1.0)
 
     ext_state.enable_debug_logging(True)
@@ -89,6 +89,8 @@ def test_extension_reinit_no_swap():
         # workspace differs - maximally ambiguous for title-based matching)
         log(f">>> tiling window {win_a.id} LEFT on ws 0, window {win_b.id} LEFT on ws 1")
         wait_for_settle(1.0)
+        client.move_to_workspace(win_a.id, 0)
+        wait_for_settle(0.5)
         client.tile(win_a.id, 1, primary)  # left on ws 0
         wait_for_settle(0.5)
         client.move_to_workspace(win_b.id, 1)

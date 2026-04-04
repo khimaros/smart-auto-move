@@ -147,6 +147,14 @@ build_extension() {
     make -C "$(dirname "$0")/.." clean build
 }
 
+# Uninstall extension in VM
+uninstall_extension() {
+    echo "Uninstalling smart-auto-move extension in VM..."
+    vm_user_shell "gnome-extensions disable $EXTENSION_UUID 2>/dev/null || true"
+    vm_user_shell "gnome-extensions uninstall $EXTENSION_UUID 2>/dev/null || true"
+    echo "Extension uninstalled"
+}
+
 # Install/reload extension in VM
 install_extension() {
     echo "Installing smart-auto-move extension in VM..."
@@ -157,10 +165,26 @@ install_extension() {
     # Install from shared folder
     vm_user_shell "gnome-extensions install --force $VM_EXT_PATH"
 
-    # Enable
-    vm_user_shell "gnome-extensions enable $EXTENSION_UUID"
+    # enable may fail if gnome-shell hasn't discovered the extension yet
+    # (e.g. fresh install before reboot); this is non-fatal since conftest
+    # and the reboot cycle will handle enabling
+    if vm_user_shell "gnome-extensions enable $EXTENSION_UUID" 2>/dev/null; then
+        echo "Extension installed and enabled"
+    else
+        echo "Extension installed (enable deferred until after reboot)"
+    fi
+}
 
-    echo "Extension installed and enabled"
+# Overwrite installed extension files from source mount to ensure
+# the on-disk code matches the host source after reboot
+refresh_extension() {
+    local dest="~/.local/share/gnome-shell/extensions/$EXTENSION_UUID"
+    echo "Refreshing extension files from source..."
+    vm_user_shell "cp -a /srv/smart-auto-move/extension.js /srv/smart-auto-move/common.js /srv/smart-auto-move/prefs.js /srv/smart-auto-move/migrations.js /srv/smart-auto-move/metadata.json $dest/"
+    vm_user_shell "cp -a /srv/smart-auto-move/lib/* $dest/lib/"
+    vm_user_shell "cp -a /srv/smart-auto-move/ui/* $dest/ui/"
+    vm_user_shell "cp -a /srv/smart-auto-move/schemas/* $dest/schemas/"
+    echo "Extension files refreshed"
 }
 
 # Install window-control extension (provides D-Bus interface for tests)
@@ -269,6 +293,21 @@ bootstrap_vm() {
     vm_shell "apt-get update && apt-get install -y python3-pytest python3-gi gir1.2-gtk-4.0"
     vm_shell "python3 -m pytest --version"
     vm_shell "ls -la /srv/smart-auto-move /srv/window-control 2>&1 | head -5 || echo 'Shared folders not mounted!'"
+
+    # prevent GNOME Software from overwriting locally-installed extensions
+    # with published versions from extensions.gnome.org during session startup
+    vm_user_shell "gsettings set org.gnome.software download-updates false"
+    vm_user_shell "gsettings set org.gnome.software allow-updates false"
+    vm_user_shell "systemctl --user mask gnome-software.service gnome-software-service.service"
+    echo "GNOME Software auto-updates disabled and service masked"
+}
+
+# Uninstall both extensions
+uninstall_all() {
+    uninstall_extension
+    echo ""
+    echo "Extension uninstalled. Reboot VM then reinstall:"
+    echo "  $0 reboot && $0 install"
 }
 
 # Install both extensions
@@ -337,6 +376,14 @@ case "${1:-help}" in
         ;;
     build)
         build_extension
+        ;;
+    uninstall)
+        check_vm
+        uninstall_all
+        ;;
+    refresh)
+        check_vm
+        refresh_extension
         ;;
     install)
         check_vm

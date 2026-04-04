@@ -34,8 +34,7 @@ schemas/gschemas.compiled: schemas/*.gschema.xml
 
 test-e2e:
 	scripts/vm-test.sh install
-	scripts/vm-test.sh logout
-	sleep 5
+	scripts/vm-test.sh reboot
 	VM_EXEC_TIMEOUT=600 scripts/vm-test.sh user-shell \
 		"cd /srv/smart-auto-move/tests && python3 -m pytest -v -s --tb=short -p no:cacheprovider . 2>&1"
 .PHONY: test-e2e

@@ -31,6 +31,10 @@ DBUS_DEST = "org.gnome.Shell"
 DBUS_PATH = "/org/gnome/Shell/Extensions/WindowControl"
 DBUS_IFACE = "org.gnome.Shell.Extensions.WindowControl"
 
+SAM_DBUS_DEST = "org.gnome.shell.extensions.SmartAutoMove"
+SAM_DBUS_PATH = "/org/gnome/shell/extensions/SmartAutoMove"
+SAM_DBUS_IFACE = "org.gnome.shell.extensions.SmartAutoMove"
+
 GSETTINGS_SCHEMA = "org.gnome.shell.extensions.smart-auto-move"
 
 # Windowbot constants
@@ -88,6 +92,20 @@ def poll_until(predicate, timeout: float = 10.0, poll: float = 0.5, default=None
             pass
         time.sleep(poll)
     return default
+
+
+def _sam_dbus_call(method: str, *args) -> str:
+    """Call a D-Bus method on the smart-auto-move extension."""
+    cmd = [
+        "gdbus", "call", "--session",
+        "--dest", SAM_DBUS_DEST,
+        "--object-path", SAM_DBUS_PATH,
+        "--method", f"{SAM_DBUS_IFACE}.{method}",
+        "--",
+    ]
+    for arg in args:
+        cmd.append(str(arg))
+    return _run_cmd(cmd)
 
 
 def _gdbus_call(method: str, *args) -> str:
@@ -562,12 +580,38 @@ class ExtensionState:
         _dconf_write("debug-logging", "true" if enable else "false")
 
     def disable_extension(self, uuid: str = "smart-auto-move@khimaros.com"):
-        """Disable the extension."""
+        """Disable the extension and wait for its D-Bus interface to go away."""
         _run_cmd(["gnome-extensions", "disable", uuid], check=False)
+        self.wait_for_down()
+
+    def wait_for_down(self, timeout: float = 5.0):
+        """Poll until the extension's D-Bus interface stops responding."""
+        def check():
+            try:
+                _sam_dbus_call("ListWindows")
+                return False
+            except Exception:
+                return True
+        result = poll_until(check, timeout=timeout, poll=0.25)
+        if not result:
+            raise RuntimeError(f"extension D-Bus still responding after {timeout}s")
 
     def enable_extension(self, uuid: str = "smart-auto-move@khimaros.com"):
-        """Enable the extension."""
+        """Enable the extension and wait for its D-Bus interface to be ready."""
         _run_cmd(["gnome-extensions", "enable", uuid])
+        self.wait_for_ready()
+
+    def wait_for_ready(self, timeout: float = 10.0):
+        """Poll until the extension's D-Bus interface responds."""
+        def check():
+            try:
+                _sam_dbus_call("ListWindows")
+                return True
+            except Exception:
+                return False
+        result = poll_until(check, timeout=timeout, poll=0.25)
+        if not result:
+            raise RuntimeError(f"extension D-Bus not ready after {timeout}s")
 
     def reload_extension(self, uuid: str = "smart-auto-move@khimaros.com"):
         """Reload the extension to reset internal state."""

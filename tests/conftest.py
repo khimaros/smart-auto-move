@@ -13,6 +13,7 @@ manually inspect the state. Use `vm-test.sh wc-list` to see windows.
 import pytest
 import subprocess
 import time
+import hashlib
 import os
 import sys
 
@@ -28,6 +29,53 @@ def pytest_runtest_makereport(item, call):
     outcome = yield
     rep = outcome.get_result()
     setattr(item, f"rep_{rep.when}", rep)
+
+
+SOURCE_DIR = "/srv/smart-auto-move"
+INSTALL_DIR = os.path.expanduser(
+    "~/.local/share/gnome-shell/extensions/smart-auto-move@khimaros.com"
+)
+# JS files whose content must match between source and installed extension
+VERIFIED_FILES = [
+    "extension.js",
+    "common.js",
+    "lib/state-matcher.js",
+    "lib/state-session.js",
+    "lib/gnome-shell.js",
+    "lib/window-state.js",
+    "lib/utils.js",
+]
+
+
+def _hash_file(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        h.update(f.read())
+    return h.hexdigest()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def verify_extension_installed():
+    """Fail fast if installed extension JS doesn't match source."""
+    mismatches = []
+    for rel in VERIFIED_FILES:
+        src = os.path.join(SOURCE_DIR, rel)
+        inst = os.path.join(INSTALL_DIR, rel)
+        if not os.path.exists(src):
+            continue
+        if not os.path.exists(inst):
+            mismatches.append(f"{rel}: not installed")
+            continue
+        src_hash = _hash_file(src)
+        inst_hash = _hash_file(inst)
+        if src_hash != inst_hash:
+            mismatches.append(f"{rel}: source={src_hash[:12]} installed={inst_hash[:12]}")
+    if mismatches:
+        pytest.fail(
+            "installed extension does not match source:\n  "
+            + "\n  ".join(mismatches)
+            + "\nrun 'scripts/vm-test.sh install && scripts/vm-test.sh reboot' to fix"
+        )
 
 
 @pytest.fixture(scope="session")
