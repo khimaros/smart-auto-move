@@ -159,6 +159,9 @@ uninstall_extension() {
 install_extension() {
     echo "Installing smart-auto-move extension in VM..."
 
+    # Block auto-updates from overwriting our test extensions
+    block_extension_updates
+
     # Disable first (ignore errors if not enabled)
     vm_user_shell "gnome-extensions disable $EXTENSION_UUID 2>/dev/null || true"
 
@@ -207,6 +210,15 @@ install_window_control() {
     vm_user_shell "gnome-extensions enable $WC_EXTENSION_UUID"
 
     echo "window-control extension installed and enabled"
+}
+
+# Block extensions.gnome.org to prevent auto-updates overwriting test extensions
+block_extension_updates() {
+    if vm_shell "grep -q extensions.gnome.org /etc/hosts" 2>/dev/null; then
+        return 0
+    fi
+    echo "Blocking extensions.gnome.org to prevent auto-updates..."
+    vm_shell "echo '127.0.0.1 extensions.gnome.org' >> /etc/hosts"
 }
 
 # Reboot VM and wait for it to come back
@@ -341,10 +353,11 @@ run_pytest() {
     local test_filter="${1:-}"
     local pytest_args="-v -s --tb=short -p no:cacheprovider"
 
+    local test_target="."
     if [ -n "$test_filter" ]; then
-        # Check if the filter is a file path, if so use it directly
-        if [[ "$test_filter" == *.py ]]; then
-            pytest_args="$pytest_args $test_filter"
+        if [[ "$test_filter" == *.py* ]]; then
+            # file path or file::class::method — use as the sole target
+            test_target="$test_filter"
         else
             pytest_args="$pytest_args -k $test_filter"
         fi
@@ -358,8 +371,8 @@ run_pytest() {
     echo "Filter: ${test_filter:-none}"
     echo "---"
 
-    # Use longer timeout (5 minutes) for test runs
-    VM_EXEC_TIMEOUT=300 vm_user_shell "cd $VM_TESTS_PATH && python3 -m pytest $pytest_args . 2>&1" || {
+    # Use longer timeout (10 minutes) for full test suite
+    VM_EXEC_TIMEOUT=600 vm_user_shell "cd $VM_TESTS_PATH && python3 -m pytest $pytest_args $test_target 2>&1" || {
         echo "---"
         echo "Some tests failed. Check output above."
         return 1

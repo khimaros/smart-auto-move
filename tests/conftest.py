@@ -25,10 +25,29 @@ from vmtest import WindowControlClient, ExtensionState, wait_for_settle
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """Store test outcome on the item for use in fixtures."""
+    """Store test outcome on the item for use in fixtures and dump journal on failure."""
     outcome = yield
     rep = outcome.get_result()
     setattr(item, f"rep_{rep.when}", rep)
+
+    # dump GNOME Shell journal on test failure during the call phase
+    if rep.when == "call" and rep.failed:
+        try:
+            result = subprocess.run(
+                ["journalctl", "--user", "-b", "--no-pager", "--since", "-120s"],
+                capture_output=True, text=True, timeout=5
+            )
+            lines = [
+                line for line in result.stdout.strip().split('\n')
+                if 'gnome-shell' in line.lower() or 'gjs' in line.lower()
+            ]
+            if lines:
+                rep.sections.append((
+                    "GNOME Shell journal (last 120s)",
+                    '\n'.join(lines[-50:])
+                ))
+        except Exception:
+            pass
 
 
 SOURCE_DIR = "/srv/smart-auto-move"
@@ -132,10 +151,14 @@ def windowbot_process(request):
     """Factory fixture to start windowbot processes."""
     processes = []
 
-    def _start(config_name: str, timeout: float = 30.0):
+    def _start(config_name: str, timeout: float = 30.0, extra_args: list = None):
         config_path = f"/srv/window-control/testdata/{config_name}"
+        cmd = ["timeout", str(timeout), "python3", "/srv/window-control/windowbot.py", "-v"]
+        if extra_args:
+            cmd.extend(extra_args)
+        cmd.append(config_path)
         proc = subprocess.Popen(
-            ["timeout", str(timeout), "python3", "/srv/window-control/windowbot.py", "-v", config_path],
+            cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )

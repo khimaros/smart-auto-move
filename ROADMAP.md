@@ -11,4 +11,5 @@
 [x] multi-monitor support
 [x] fix TRACKING windows incorrectly migrated to different slot on title change
 [x] fix TRACKING windows swapping positions on monitors-changed (lock/unlock)
+[x] skip tracking transient/dialog windows to prevent parent window snapping
 ```
