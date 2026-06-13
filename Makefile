@@ -33,6 +33,7 @@ schemas/gschemas.compiled: schemas/*.gschema.xml
 	glib-compile-schemas ./schemas/
 
 test-e2e:
+	scripts/vm-test.sh start
 	scripts/vm-test.sh install
 	scripts/vm-test.sh reboot
 	VM_EXEC_TIMEOUT=600 scripts/vm-test.sh user-shell \

@@ -1,9 +1,7 @@
 [/]
+config-version=37
 debug-logging=false
-match-threshold=0.69999999999999996
-overrides='{"Firefox":[{"action":1,"threshold":0.8}],"com.belmoussaoui.Authenticator":[{"action":1,"threshold":0.7}],"geary":[{"action":1,"threshold":0.20000000000000007}],"Signal":[{"action":1,"threshold":0.1999999999999999}],"gnome-terminal-server":[{"action":1,"threshold":0.1999999999999999}]}'
-save-frequency=1500
+match-threshold=0.7
+overrides='{"Firefox":[{"action":"RESTORE","threshold":0.8}],"com.belmoussaoui.Authenticator":[{"action":"RESTORE","threshold":0.7}],"geary":[{"action":"RESTORE","threshold":0.2}],"Signal":[{"action":"RESTORE","threshold":0.2}],"gnome-terminal-server":[{"action":"RESTORE","threshold":0.2}]}'
 saved-windows='{}'
-startup-delay=2500
-sync-frequency=200
 sync-mode='IGNORE'

@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## unreleased
+
+### Fixed
+
+- settled windows are no longer moved when their title changes: slot
+  migration after matching has been removed entirely, and identity is now
+  resolved exclusively while a window is pending
+- fixed an operator precedence bug in exact-match detection which caused
+  nearly every new window to skip the title-stability wait, the ambiguity
+  check, and the confidence check
+- windows with generic titles now wait for their title to become specific
+  (up to the generic title extended wait) before being matched when saved
+  windows of the same application exist, instead of matching prematurely
+  and being corrected with a visible move later
+
 ## version 36
 
 ### New Features

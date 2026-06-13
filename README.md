@@ -26,7 +26,7 @@ the first step is to choose your **Default Synchronization Mode**: `IGNORE` or `
 
 next is to choose your global **Match Threshold**, the default works well for most use cases. a number closer to `0.0` will match windows with less similar attributes, whereas `1.0` requires an exact match.
 
-advanced users can tune window matching behavior with parameters like **New Window Max Wait Time**, **Title Stability**, and other timing settings in the preferences.
+advanced users can tune window matching behavior with parameters like **New Window Max Wait Time**, **New Window Title Stability**, and other timing settings in the preferences.
 
 after you've dialed in your overrides, the learning apparatus can be paused. enable **Freeze Saves** to prevent changes to Saved Windows. N.B. this will lose track of windows if their titles change.
 
@@ -60,8 +60,6 @@ no manual intervention is required. the migration happens automatically on first
 
 LIMITATION: terminals which include the current directory in the title may not reach the match threshold if they do not preserve the working directory across restarts. WORKAROUND: create a per-app override (see above) and set the threshold to a lower value, eg. `0.2`
 
-LIMITATION: multi-monitor is not well supported and may result in windows becoming "stuck". WORKAROUND: visit the "Saved Windows" tab in preferences and delete any stuck windows.
-
 ## troubleshooting
 
 if everything is horribly broken, clear your Saved Windows:
@@ -69,16 +67,27 @@ if everything is horribly broken, clear your Saved Windows:
 ```
 $ gnome-extensions disable smart-auto-move@khimaros.com
 
-$ dconf write /org/gnome/shell/extensions/smart-auto-move/saved-windows '{}'
+$ dconf reset /org/gnome/shell/extensions/smart-auto-move/saved-windows
 
 $ gnome-extensions enable smart-auto-move@khimaros.com
 ```
 
 ## behavior
 
-because there is no way to uniquely distinguish individual windows from an application across restarts, smart-auto-move uses a heuristic to uniquely identify them. this is primarily based on startup order and title. in cases where there are multiple windows with the same title, they are restored based on relative startup sequence.
+because there is no way to uniquely distinguish individual windows from an application across restarts, smart-auto-move uses a heuristic to identify them, based on application id (wm_class) and title similarity (character histogram distance).
 
-titles are matched using Levenstein distance. the match bonus for title is calculated based on `(title length - distance) / title length`.
+a window's identity is resolved once, shortly after it appears:
+
+- a window whose title exactly matches a remembered window of the same application is restored immediately.
+- a window with a distinctive title is matched after its title has been stable briefly (**New Window Title Stability**).
+- a window with a short generic title (e.g. a splash screen or "Loading...") waits for the title to become specific before matching, up to the **Generic Title Extended Wait**, when remembered windows of the same application exist.
+- multiple simultaneous windows with very similar titles are held until they can be told apart or the wait times out.
+
+once a window has been matched (or learned as new), it is never moved again because its title changed. later title changes only update the remembered identity. windows are only repositioned after that point when the monitor layout changes.
+
+multi-monitor layouts are remembered per physical connector: each window keeps a separate saved position for every monitor it has been placed on, and moves to the most recently preferred connected monitor when displays are added or removed (e.g. docking and undocking).
+
+see [DESIGN.md](DESIGN.md) for the full state machine.
 
 ## settings
 
@@ -103,23 +112,25 @@ $ dconf write /org/gnome/shell/extensions/smart-auto-move/new-window-max-wait-ms
 ```
 
 default to ignoring windows unless explicitly defined. restore all windows of the gnome-calculator app, all firefox windows except for the profile chooser, and Nautilus only if the window title is "Downloads":
-/
+
 ```
 $ dconf write /org/gnome/shell/extensions/smart-auto-move/sync-mode "'IGNORE'"
-$ dconf write /org/gnome/shell/extensions/smart-auto-move/overrides '{"gnome-calculator": [{"action":1}], "firefox": [{"query": {"title": "Firefox - Choose User Profile"}, "action": 0}, {"action": 1}],"org.gnome.Nautilus":[{"query":{"title":"Downloads"},"action":1}]}'
+$ dconf write /org/gnome/shell/extensions/smart-auto-move/overrides \''{"gnome-calculator": [{"action":"RESTORE"}], "firefox": [{"title": "Firefox - Choose User Profile", "action": "IGNORE"}, {"action": "RESTORE"}], "org.gnome.Nautilus": [{"title": "Downloads", "action": "RESTORE"}]}'\'
 ```
 
 default to restoring all windows, but ignore the firefox profile chooser and any nautilus windows:
 
 ```
 $ dconf write /org/gnome/shell/extensions/smart-auto-move/sync-mode "'RESTORE'"
-$ dconf write /org/gnome/shell/extensions/smart-auto-move/overrides '{"firefox": [{"query": {"title": "Firefox - Choose User Profile"}, "action": 0}], "org.gnome.Nautilus": [{"action":0}]}'
+$ dconf write /org/gnome/shell/extensions/smart-auto-move/overrides \''{"firefox": [{"title": "Firefox - Choose User Profile", "action": "IGNORE"}], "org.gnome.Nautilus": [{"action": "IGNORE"}]}'\'
 ```
+
+an override rule may also set a per-app `threshold` (match threshold) and `match_properties` (which window properties to restore, e.g. `["workspace"]`).
 
 show all saved firefox windows (N.B. `jq` will fail if window title contains `\`):
 
 ```
-$ dconf read /org/gnome/shell/extensions/smart-auto-move/saved-windows | sed "s/^'//; s/'$//" | jq -C .Firefox | less -SR
+$ dconf read /org/gnome/shell/extensions/smart-auto-move/saved-windows | sed "s/^'//; s/'$//" | jq -C '[ .[] | select(.props.wm_class == "firefox") ]' | less -SR
 ```
 
 there are example configs in the `examples/` dir which can be loaded (N.B. while extension is disabled) with:

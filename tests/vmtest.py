@@ -45,7 +45,30 @@ WINDOWBOT_TESTDATA = "/srv/window-control/testdata"
 # Default screen geometry constants (used as fallback)
 DEFAULT_SCREEN_WIDTH = 1280
 DEFAULT_SCREEN_HEIGHT = 1024
+
+# Preferred monitor mode for gdctl set. The VM's virtual displays advertise
+# 5120x2160@50 as their preferred mode, so omitting the mode (or scale,
+# which then gets auto-selected per EDID size) produces layouts that fail
+# mutter's adjacency check with the hardcoded 1280px offsets below. This is
+# only a preference: set_monitors falls back to any advertised mode at the
+# target resolution per connector, since refresh rates differ between the
+# virtual outputs (e.g. Virtual-3 prefers @74.997, not @60.020).
+MONITOR_MODE = f"{DEFAULT_SCREEN_WIDTH}x{DEFAULT_SCREEN_HEIGHT}@60.020"
 TOP_BAR_HEIGHT = 32
+
+# the always-present primary virtual output; the single-monitor test baseline
+PRIMARY_CONNECTOR = "Virtual-1"
+
+
+class HarnessError(RuntimeError):
+    """A failure in the test harness or environment (display configuration,
+    missing instrument, VM not ready) rather than a product regression.
+
+    Subclasses RuntimeError for backward compatibility with existing
+    `except RuntimeError` callers and poll_until's broad except. The distinct
+    type lets the preflight and pytest reporting label environment breakage
+    unambiguously so it never masquerades as a failing requirement.
+    """
 
 
 @dataclass
@@ -216,6 +239,51 @@ def clear_monitor_cache():
     """Clear the monitor geometry cache (call after monitor changes)."""
     global _monitor_cache
     _monitor_cache = None
+
+
+def _parse_monitor_modes() -> Dict[str, List[str]]:
+    """Parse the modes each connector advertises from `gdctl show -m`.
+
+    Returns {connector: [mode_id, ...]} where mode_id is like
+    '1280x1024@60.020'. Used to pick a per-connector mode that actually
+    exists rather than assuming one global mode string for every output.
+    """
+    out = _run_cmd(["gdctl", "show", "-m"])
+    modes: Dict[str, List[str]] = {}
+    current = None
+    for line in out.splitlines():
+        connector = re.search(r"Monitor (\S+) \(", line)
+        if connector:
+            current = connector.group(1)
+            modes[current] = []
+            continue
+        if current is None:
+            continue
+        mode = re.search(r"(\d+x\d+@[\d.]+)", line)
+        if mode:
+            modes[current].append(mode.group(1))
+    return modes
+
+
+def _select_connector_mode(connector: str, modes_by_connector: Dict[str, List[str]]) -> str:
+    """Pick a usable mode for a connector at the target test resolution.
+
+    Prefers the canonical MONITOR_MODE; otherwise the first advertised mode
+    at the target WxH. Raises HarnessError (an environment problem, not a
+    product regression) when the connector offers no such mode.
+    """
+    available = modes_by_connector.get(connector, [])
+    if MONITOR_MODE in available:
+        return MONITOR_MODE
+    target = f"{DEFAULT_SCREEN_WIDTH}x{DEFAULT_SCREEN_HEIGHT}@"
+    for mode in available:
+        if mode.startswith(target):
+            return mode
+    raise HarnessError(
+        f"connector {connector} advertises no "
+        f"{DEFAULT_SCREEN_WIDTH}x{DEFAULT_SCREEN_HEIGHT} mode "
+        f"(available: {available or 'none'}); cannot configure test monitors"
+    )
 
 
 def _dconf_reset(key: str):
@@ -411,18 +479,44 @@ class WindowControlClient:
         if primary is None:
             primary = connectors[0]
 
+        modes = _parse_monitor_modes()
         cmd = ["gdctl", "set"]
 
         x_offset = 0
         for connector in connectors:
-            is_primary = connector == primary
-            cmd.extend(["--logical-monitor", "--monitor", connector])
-            if is_primary:
+            mode = _select_connector_mode(connector, modes)
+            cmd.extend(["--logical-monitor", "--monitor", connector,
+                        "--mode", mode, "--scale", "1"])
+            if connector == primary:
                 cmd.append("--primary")
             cmd.extend(["--x", str(x_offset), "--y", "0"])
-            x_offset += 1280
+            x_offset += DEFAULT_SCREEN_WIDTH
 
-        _run_cmd(cmd)
+        try:
+            _run_cmd(cmd)
+        except RuntimeError as e:
+            raise HarnessError(f"failed to configure monitors {connectors}: {e}") from e
+        clear_monitor_cache()
+
+    def set_single_monitor_baseline(self):
+        """Reset to a single primary monitor: the known-good test baseline."""
+        self.set_monitors([PRIMARY_CONNECTOR], primary=PRIMARY_CONNECTOR)
+
+    def ensure_single_monitor_baseline(self):
+        """Restore the single-monitor baseline only if it is not already active.
+
+        A cheap connector check in the common case; it reconfigures (and waits
+        to settle) only when a prior test left extra monitors enabled, so a
+        monitor test that failed mid-reconfiguration cannot cascade into the
+        next test.
+        """
+        try:
+            enabled = self.get_enabled_connectors()
+        except Exception:
+            enabled = []
+        if enabled != [PRIMARY_CONNECTOR]:
+            self.set_single_monitor_baseline()
+            wait_for_settle(2.0)
 
     def set_monitor_enabled(self, connector_or_index, enabled: bool):
         """
@@ -601,7 +695,9 @@ class ExtensionState:
         _run_cmd(["gnome-extensions", "enable", uuid])
         self.wait_for_ready()
 
-    def wait_for_ready(self, timeout: float = 10.0):
+    # generous timeout: gnome-shell can be slow to export the extension's
+    # D-Bus interface right after monitor-heavy tests reconfigure displays
+    def wait_for_ready(self, timeout: float = 30.0):
         """Poll until the extension's D-Bus interface responds."""
         def check():
             try:
@@ -1041,6 +1137,75 @@ class PositionAssertion:
             raise AssertionError(
                 f"Window {details.id} not tiled {position.value}: {', '.join(errors)}"
             )
+
+
+def check_environment(wc_client: 'WindowControlClient' = None,
+                      ext_state: 'ExtensionState' = None) -> List[str]:
+    """Validate that the test environment (not the product) is healthy.
+
+    Returns a list of problem strings (empty means healthy). Checks the
+    instruments development depends on: the window-control D-Bus interface,
+    a settable single-monitor baseline at a real advertised mode, and a
+    smart-auto-move extension that comes up. This is the fast gate that turns
+    a display-config glitch into a 5-second labeled failure instead of a
+    minutes-long run of failures that look like code regressions.
+    """
+    wc_client = wc_client or WindowControlClient()
+    ext_state = ext_state or ExtensionState()
+    problems = []
+
+    # the window-control instrument must respond before anything else works
+    try:
+        wc_client.get_physical_monitors()
+    except Exception as e:
+        problems.append(f"window-control D-Bus not responding: {e}")
+        return problems
+
+    # the primary connector must exist and offer a usable mode
+    available = wc_client.get_available_connectors()
+    if PRIMARY_CONNECTOR not in available:
+        problems.append(
+            f"primary connector {PRIMARY_CONNECTOR} not found (available: {available})")
+    else:
+        try:
+            _select_connector_mode(PRIMARY_CONNECTOR, _parse_monitor_modes())
+        except HarnessError as e:
+            problems.append(str(e))
+
+    # the single-monitor baseline must apply and take effect
+    if not problems:
+        try:
+            wc_client.set_single_monitor_baseline()
+            wait_for_settle(2.0)
+            enabled = wc_client.get_enabled_connectors()
+            if enabled != [PRIMARY_CONNECTOR]:
+                problems.append(f"baseline monitor config not applied (enabled: {enabled})")
+        except Exception as e:
+            problems.append(f"failed to set baseline monitor config: {e}")
+
+    # the extension under test must load and export its D-Bus interface
+    try:
+        ext_state.enable_extension()
+    except Exception as e:
+        problems.append(
+            f"smart-auto-move extension not ready: {e} (check journal for load errors)")
+
+    return problems
+
+
+def run_preflight() -> int:
+    """CLI entry point: print an environment health report and return a
+    non-zero status on problems so `vm-test.sh preflight` can gate a run."""
+    print("=== smart-auto-move test environment preflight ===")
+    problems = check_environment()
+    if not problems:
+        print("PASS: environment healthy "
+              "(window-control up, monitors settable, extension ready)")
+        return 0
+    print("*** ENVIRONMENT NOT READY (harness problem, not a code regression) ***")
+    for p in problems:
+        print(f"  - {p}")
+    return 1
 
 
 if __name__ == "__main__":

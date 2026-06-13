@@ -215,18 +215,26 @@ install_window_control() {
 # Block extensions.gnome.org to prevent auto-updates overwriting test extensions
 block_extension_updates() {
     if vm_shell "grep -q extensions.gnome.org /etc/hosts" 2>/dev/null; then
+        echo "extension auto-updates already disabled (extensions.gnome.org blocked)"
         return 0
     fi
-    echo "Blocking extensions.gnome.org to prevent auto-updates..."
+    echo "Disabling extension auto-updates (blocking extensions.gnome.org)..."
     vm_shell "echo '127.0.0.1 extensions.gnome.org' >> /etc/hosts"
 }
 
-# Reboot VM and wait for it to come back
-reboot_vm() {
-    echo "Rebooting VM..."
-    virsh reboot "$VM_NAME"
+# Restore networking to extensions.gnome.org (re-enable auto-updates)
+unblock_extension_updates() {
+    if ! vm_shell "grep -q extensions.gnome.org /etc/hosts" 2>/dev/null; then
+        echo "extension auto-updates already enabled (extensions.gnome.org not blocked)"
+        return 0
+    fi
+    echo "Enabling extension auto-updates (unblocking extensions.gnome.org)..."
+    vm_shell "sed -i '/extensions.gnome.org/d' /etc/hosts"
+}
 
-    echo "Waiting for VM to come back..."
+# Wait for guest agent and GNOME session to be ready
+wait_for_vm() {
+    echo "Waiting for VM to come up..."
     sleep 10
 
     local timeout=120
@@ -234,7 +242,7 @@ reboot_vm() {
     while [ $elapsed -lt $timeout ]; do
         # Check if guest agent responds
         if virsh qemu-agent-command "$VM_NAME" '{"execute":"guest-ping"}' >/dev/null 2>&1; then
-            echo "VM is back, waiting for GNOME session..."
+            echo "VM is up, waiting for GNOME session..."
             sleep 5
             # Wait for GNOME shell to start
             if vm_shell "pgrep gnome-shell" >/dev/null 2>&1; then
@@ -247,8 +255,56 @@ reboot_vm() {
         echo "  waiting... ($elapsed/${timeout}s)"
     done
 
-    echo "WARNING: VM didn't come back within ${timeout}s"
+    echo "WARNING: VM didn't come up within ${timeout}s"
     return 1
+}
+
+# Reboot VM and wait for it to come back
+reboot_vm() {
+    echo "Rebooting VM..."
+    virsh reboot "$VM_NAME"
+    wait_for_vm
+}
+
+# Start VM if not already running and wait for GNOME session
+ensure_vm() {
+    local state
+    state=$(virsh domstate "$VM_NAME" 2>/dev/null)
+    if [ "$state" = "running" ]; then
+        return 0
+    fi
+    echo "Starting VM '$VM_NAME' (state: $state)..."
+    virsh start "$VM_NAME"
+    wait_for_vm
+}
+
+# Shut down the VM gracefully and wait for it to power off
+stop_vm() {
+    local state
+    state=$(virsh domstate "$VM_NAME" 2>/dev/null)
+    if [ "$state" != "running" ]; then
+        echo "VM '$VM_NAME' is not running (state: $state)"
+        return 0
+    fi
+
+    echo "Shutting down VM '$VM_NAME'..."
+    virsh shutdown "$VM_NAME"
+
+    local timeout=60
+    local elapsed=0
+    while [ $elapsed -lt $timeout ]; do
+        state=$(virsh domstate "$VM_NAME" 2>/dev/null)
+        if [ "$state" = "shut off" ]; then
+            echo "VM is shut off"
+            return 0
+        fi
+        sleep 2
+        elapsed=$((elapsed + 2))
+        echo "  waiting... ($elapsed/${timeout}s)"
+    done
+
+    echo "WARNING: VM didn't shut down within ${timeout}s; forcing off"
+    virsh destroy "$VM_NAME"
 }
 
 # Logout GNOME session and wait for auto-login (faster than reboot)
@@ -348,6 +404,13 @@ wc_all_details() {
     vm_user_shell "/srv/window-control/wcc dump"
 }
 
+# Run a fast environment preflight check in the VM
+run_preflight() {
+    echo "Running environment preflight in VM..."
+    echo "---"
+    vm_user_shell "cd $VM_TESTS_PATH && python3 -c 'import sys; from vmtest import run_preflight; sys.exit(run_preflight())'"
+}
+
 # Run pytest test suite in VM
 run_pytest() {
     local test_filter="${1:-}"
@@ -410,6 +473,14 @@ case "${1:-help}" in
         check_vm
         install_all
         ;;
+    disable-updates)
+        check_vm
+        block_extension_updates
+        ;;
+    enable-updates)
+        check_vm
+        unblock_extension_updates
+        ;;
     reboot)
         reboot_vm
         ;;
@@ -417,8 +488,18 @@ case "${1:-help}" in
         check_vm
         logout_session
         ;;
+    start)
+        ensure_vm
+        ;;
+    stop)
+        stop_vm
+        ;;
+    preflight)
+        ensure_vm
+        run_preflight
+        ;;
     test)
-        check_vm
+        ensure_vm
         run_test "${2:-slowtitle.conf}"
         ;;
     logs)
@@ -431,7 +512,7 @@ case "${1:-help}" in
         ;;
     full)
         # Full test cycle with logout
-        check_vm
+        ensure_vm
         install_all
         logout_session
         sleep 5  # Give extension time to initialize after login
@@ -456,7 +537,7 @@ case "${1:-help}" in
         ;;
     pytest)
         # Run pytest tests
-        check_vm
+        ensure_vm
         run_pytest "${2:-}"
         ;;
     clear-state)
@@ -492,11 +573,16 @@ case "${1:-help}" in
         echo ""
         echo "Commands:"
         echo "  check         - Check if VM is running"
+        echo "  start         - Start VM if needed and wait for GNOME session"
+        echo "  stop          - Shut down the VM gracefully"
+        echo "  preflight     - Fast environment health check (run before a suite)"
         echo "  bootstrap     - Install required packages in VM (run once)"
         echo "  build         - Build extension on host"
         echo "  install       - Build and install smart-auto-move in VM"
         echo "  install-wc    - Install window-control extension (D-Bus API for tests)"
         echo "  install-all   - Install both extensions"
+        echo "  disable-updates - Block extension auto-updates (extensions.gnome.org)"
+        echo "  enable-updates  - Allow extension auto-updates (extensions.gnome.org)"
         echo "  reboot        - Reboot VM and wait for GNOME session"
         echo "  logout        - Logout GNOME session and wait for auto-login (faster)"
         echo "  test [conf]   - Run windowbot test (default: slowtitle.conf)"

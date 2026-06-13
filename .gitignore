@@ -1,7 +1,5 @@
 /build
 smart-auto-move.dconf
 *.ui~
-AGENTS.md
-CLAUDE.md
-GEMINI.md
+**/__pycache__/
 /tmp

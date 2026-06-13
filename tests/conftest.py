@@ -20,7 +20,10 @@ import sys
 # Add parent directory for vmtest import
 sys.path.insert(0, os.path.dirname(__file__))
 
-from vmtest import WindowControlClient, ExtensionState, wait_for_settle
+from vmtest import (
+    WindowControlClient, ExtensionState, HarnessError, check_environment,
+    wait_for_settle,
+)
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -29,6 +32,18 @@ def pytest_runtest_makereport(item, call):
     outcome = yield
     rep = outcome.get_result()
     setattr(item, f"rep_{rep.when}", rep)
+
+    # label harness/environment failures distinctly so a broken display config
+    # or missing instrument is never mistaken for a product regression
+    if rep.failed and getattr(call, "excinfo", None) is not None:
+        if isinstance(call.excinfo.value, HarnessError):
+            rep.sections.append((
+                "HARNESS/ENVIRONMENT PROBLEM",
+                "this failure originated in the test harness or environment "
+                "(e.g. monitor/display configuration), NOT a product code "
+                "regression. fix the environment and re-run "
+                "('scripts/vm-test.sh preflight' diagnoses it)."
+            ))
 
     # dump GNOME Shell journal on test failure during the call phase
     if rep.when == "call" and rep.failed:
@@ -97,6 +112,25 @@ def verify_extension_installed():
         )
 
 
+@pytest.fixture(scope="session", autouse=True)
+def verify_environment(verify_extension_installed):
+    """Fail the whole session fast if the environment (not the product) is
+    broken, with an unmistakable label.
+
+    Depends on verify_extension_installed so the hash check runs first. A
+    broken VM display config previously surfaced minutes into the run as a
+    cluster of failures indistinguishable from regressions; this gate turns
+    that into an immediate, clearly-labeled session abort.
+    """
+    problems = check_environment()
+    if problems:
+        pytest.exit(
+            "ENVIRONMENT NOT READY (harness/environment problem, not a code "
+            "regression):\n  " + "\n  ".join(problems),
+            returncode=3,
+        )
+
+
 @pytest.fixture(scope="session")
 def wc_client():
     """Provides a WindowControl D-Bus client for the test session."""
@@ -120,7 +154,12 @@ def clean_state(ext_state, wc_client, request):
     # 2. Reset the dconf settings entirely
     ext_state.reset_settings()
 
-    # 3. Enable the extension
+    # 3. Restore the single-monitor baseline while disabled, so a prior
+    # monitor test that failed mid-reconfiguration cannot leak its layout
+    # into this test (the extension sees no spurious monitors-changed event).
+    wc_client.ensure_single_monitor_baseline()
+
+    # 4. Enable the extension
     ext_state.enable_extension()
 
     # Enable debug logging for easier troubleshooting
