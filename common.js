@@ -115,11 +115,21 @@ export function getActionId(action) {
 }
 
 export function parseOverrides(overridesStr) {
+  let parsed;
   try {
-    return JSON.parse(overridesStr || "{}");
+    parsed = JSON.parse(overridesStr || "{}");
   } catch (e) {
     return {};
   }
+  // normalize every value to an array of rules: prefs.js and the matcher both
+  // expect arrays, but a value may be a single rule object (legacy/convenience
+  // form written by the test harness or hand-edited dconf).
+  for (const wsh of Object.keys(parsed)) {
+    if (!Array.isArray(parsed[wsh])) {
+      parsed[wsh] = parsed[wsh] ? [parsed[wsh]] : [];
+    }
+  }
+  return parsed;
 }
 
 export function deleteNonOccupiedWindows(savedWindows) {

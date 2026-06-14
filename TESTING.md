@@ -2,10 +2,11 @@
 
 ## unit tests
 
-the matcher state machine is host-testable without the VM:
+the matcher state machine and override parsing are host-testable without the VM:
 
 ```
 $ gjs -m tests/matcher_test.js
+$ gjs -m tests/common_test.js
 ```
 
 ## preflight

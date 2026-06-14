@@ -2,8 +2,16 @@
 
 ## unreleased
 
+### Changed
+
+- declare support for GNOME Shell 50 (no code changes required: the extension
+  uses none of the APIs removed in GNOME 50)
+
 ### Fixed
 
+- the preferences dialog no longer crashes with "wshos.forEach is not a
+  function" when an override is stored as a single rule object instead of an
+  array; override parsing now normalizes every value to an array of rules
 - settled windows are no longer moved when their title changes: slot
   migration after matching has been removed entirely, and identity is now
   resolved exclusively while a window is pending

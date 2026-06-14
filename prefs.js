@@ -355,8 +355,8 @@ export default class SAMPreferences extends ExtensionPreferences {
           const normalizedAppId = appId.endsWith(".desktop")
             ? appId.slice(0, -".desktop".length)
             : appId;
-          const overrides = JSON.parse(
-            settings.get_string(Common.SETTINGS_KEY_OVERRIDES) || "{}",
+          const overrides = Common.parseOverrides(
+            settings.get_string(Common.SETTINGS_KEY_OVERRIDES),
           );
           if (!overrides[normalizedAppId]) {
             overrides[normalizedAppId] = [];
@@ -386,8 +386,8 @@ export default class SAMPreferences extends ExtensionPreferences {
       });
       dialog.connect("response", (_source, wsh, title) => {
         if (wsh && title) {
-          const overrides = JSON.parse(
-            settings.get_string(Common.SETTINGS_KEY_OVERRIDES) || "{}",
+          const overrides = Common.parseOverrides(
+            settings.get_string(Common.SETTINGS_KEY_OVERRIDES),
           );
           if (!overrides[wsh]) {
             overrides[wsh] = [];
@@ -635,16 +635,16 @@ function loadSavedWindowsSetting(extension, list_widget, list_objects) {
       });
 
       const ignore_signal = ignore_widget.connect("clicked", () => {
-        const overrides = JSON.parse(
-          settings.get_string(Common.SETTINGS_KEY_OVERRIDES) || "{}",
+        const overrides = Common.parseOverrides(
+          settings.get_string(Common.SETTINGS_KEY_OVERRIDES),
         );
         Common.ignoreSavedWindow(saved_windows, overrides, wsh, swi, 0, false);
         settings.set_string(Common.SETTINGS_KEY_OVERRIDES, JSON.stringify(overrides));
       });
 
       const ignore_any_signal = ignore_any_widget.connect("clicked", () => {
-        const overrides = JSON.parse(
-          settings.get_string(Common.SETTINGS_KEY_OVERRIDES) || "{}",
+        const overrides = Common.parseOverrides(
+          settings.get_string(Common.SETTINGS_KEY_OVERRIDES),
         );
         const threshold = settings.get_double(Common.SETTINGS_KEY_MATCH_THRESHOLD);
         Common.ignoreSavedWindow(saved_windows, overrides, wsh, swi, threshold, true);

@@ -2,25 +2,31 @@
 Story 12: title change shortly after settling must not move the window
 
 Same requirement as story 9 (TRACKING windows must never migrate to a
-different slot on title change), but exercised shortly after settling.
-Regression test for the removed post-settle migration path, whose
-time-based guard only applied after 15s in TRACKING: story 9 times its
-title change at 20s after TRACKING (outside that window), this story at
-~7s (inside it), where windows used to be migrated and visibly moved.
+different slot on title change), but exercised shortly after settling,
+inside the 15s grace window of the removed post-settle migration path.
+
+Determinism: a pending window is force-resolved at the new-window max-wait
+timeout (10s after creation), so the title change is scheduled after that
+timeout to guarantee beta is in TRACKING first. The short title is
+dissimilar to the long title so beta resolves as a NEW window rather than
+matching the unoccupied slot. The assertion is gated on beta actually
+reaching TRACKING, so a slow settle fails as a clear precondition error
+rather than masquerading as an invariant violation.
 
 Config timeline (title_migration_early.conf):
 - 0s: create window with long title
 - 15s: close window (creates unoccupied slot)
-- 16s: create window with short title
-- 24s: change short title to exact long title (~7s in TRACKING)
+- 16s: create window with dissimilar short title
+- 28s: change short title to exact long title (in TRACKING, inside grace)
 """
 
 from vmtest import (
     wait_for_settle, place_and_settle, poll_until, terminate_process,
 )
 
+WM_CLASS = "com.example.WindowBot"
 TITLE_LONG = "Project Management Dashboard - Q4 Report"
-TITLE_SHORT = "Project Manager"
+TITLE_SHORT = "Scratch Buffer File"
 
 
 class TestStory12:
@@ -61,8 +67,25 @@ class TestStory12:
         initial = wc_client.get_details(win_beta.id)
         print(f"initial position: ({initial.x}, {initial.y}, {initial.width}x{initial.height})")
 
-        # wait for the window to reach TRACKING state
-        wait_for_settle(3.0)
+        # precondition gate: the scenario under test only exists once beta has
+        # actually settled into TRACKING as its own new occupied slot. poll for
+        # that explicitly instead of assuming a fixed settle delay, so a slow
+        # settle fails here with a clear precondition message rather than later
+        # looking like an invariant violation.
+        def beta_tracked_as_new():
+            for entry in ext_state.get_saved_windows():
+                if not entry.get("occupied"):
+                    continue
+                props = entry.get("props", {})
+                if props.get("wm_class") == WM_CLASS and props.get("title") == TITLE_SHORT:
+                    return True
+            return False
+
+        assert poll_until(beta_tracked_as_new, timeout=11.0, poll=0.5), (
+            f"precondition not met: '{TITLE_SHORT}' never settled into TRACKING "
+            f"as a new window before the title change (timing/load, not an "
+            f"invariant violation)"
+        )
 
         pre_title_change = wc_client.get_details(win_beta.id)
         print(f"pre-title-change position: ({pre_title_change.x}, {pre_title_change.y})")

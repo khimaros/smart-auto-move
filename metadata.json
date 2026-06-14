@@ -5,6 +5,6 @@
   "description": "Smart Auto Move learns the position, size, and workspace of your application windows and restores them on subsequent launches. Supports Wayland.\n\nNOTE: Optimized for use with static workspaces. For more control, set the default behavior to IGNORE and then selectively RESTORE only desired apps.",
   "settings-schema": "org.gnome.shell.extensions.smart-auto-move",
   "original-author": "khimaros",
-  "shell-version": ["49"],
-  "version": "46"
+  "shell-version": ["49", "50"],
+  "version": "47"
 }
