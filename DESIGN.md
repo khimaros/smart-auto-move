@@ -115,9 +115,12 @@ be matched onto each other's slots and moved across workspaces.
 ## persistence
 
 every state change serializes `knownWindows` through the onStateChange
-callback; the extension writes it to the `saved-windows` gsettings key with
-its own change signal blocked to avoid feedback loops. freeze-saves flips
-the session read-only.
+callback; the extension writes it to the `saved-windows` gsettings key and
+records the exact string written. `_handleSettingChanged` ignores a
+`saved-windows` change whose value equals that last write -- the asynchronous
+dconf echo of our own save -- so the extension never reloads its own state
+(block_signal_handler is unreliable for dconf and isn't used). freeze-saves
+flips the session read-only.
 
 a `saved-windows` change from any other writer (the prefs dialog, an external
 client) still fires the handler, which calls `restoreFromState` on the live

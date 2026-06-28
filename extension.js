@@ -67,12 +67,6 @@ const SETTING_HANDLERS = {
   "saved-windows": {
     type: "string",
     apply: (value, ext) => {
-      // block_signal_handler in _saveState is not reliable for dconf: the
-      // "changed" signal can be delivered asynchronously, after unblock (true on
-      // some glib/dconf versions). Also ignore a value equal to our own last
-      // write so the extension never reloads (restoreFromState) its own state;
-      // react only to genuine external edits (prefs dialog, external clients).
-      if (value === ext._lastSavedWindows) return;
       try {
         const newState = JSON.parse(value || "{}");
         debug("extension", "saved-windows changed: reloading tracker state");
@@ -160,22 +154,14 @@ export default class SmartAutoMove extends Extension {
   }
 
   _saveState(state) {
-    // remember exactly what we write so the saved-windows changed handler can
-    // ignore the asynchronous dconf echo of our own write; block_signal_handler
-    // alone does not suppress it reliably across glib/dconf versions
+    // remember the exact value we write so _handleSettingChanged can ignore the
+    // asynchronous dconf echo of our own write; only genuine external edits differ
     const json = JSON.stringify(state);
     this._lastSavedWindows = json;
-    if (this._settingsId) {
-      this._settings.block_signal_handler(this._settingsId);
-    }
     try {
       this._settings.set_string("saved-windows", json);
     } catch (e) {
       debug("extension", `Error saving state: ${e.message}`, true);
-    } finally {
-      if (this._settingsId) {
-        this._settings.unblock_signal_handler(this._settingsId);
-      }
     }
   }
 
@@ -202,6 +188,7 @@ export default class SmartAutoMove extends Extension {
     }
     this._dbusImpl = null;
     this._settings = null;
+    this._lastSavedWindows = null;
   }
 
   _migrateSettingsIfNeeded() {
@@ -250,6 +237,13 @@ export default class SmartAutoMove extends Extension {
     }
 
     const rawValue = this._getSettingValue(key, handler.type);
+
+    // ignore the asynchronous dconf echo of our own saved-windows write; genuine
+    // external edits (e.g. from the prefs dialog) differ and are still applied
+    if (key === "saved-windows" && rawValue === this._lastSavedWindows) {
+      return;
+    }
+
     const value = handler.transform ? handler.transform(rawValue) : rawValue;
 
     if (handler.field) {

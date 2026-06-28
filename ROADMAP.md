@@ -17,12 +17,12 @@
     [x] invariant guard: onWindowModified never demotes an already-tracked
         window to PENDING; re-binds it by prior identity (_rebindKnownWindow)
     [x] matcher unit tests for both paths (fail against pre-fix matcher)
-    [x] trigger hardening: _saveState records its last write; the saved-windows
-        handler ignores a value equal to it, so the extension never reloads its
-        own writes even where block_signal_handler leaks. story 14 guards it
-        (passes; self-writes are deduped in-process anyway, so it is belt-and-
-        suspenders). real-world trigger still under investigation -- no periodic
-        cleanup timer exists; only external different-value writes reload. see
+    [x] trigger hardening: _saveState records its last write; _handleSettingChanged
+        early-returns on a saved-windows change equal to it (block_signal_handler
+        removed -- unreliable for dconf), so the extension never reloads its own
+        writes even where the dedup leaks. _lastSavedWindows is cleared on disable.
+        story 14 guards it. the real-world trigger turned out to be a host-side
+        broken dconf (root-owned /run/user/1000/dconf/user); see
         [[occupancy-wipe-spontaneous-move]].
     [x] verify in VM: full suite green (22/22) with the hardened build. single-
         monitor stories all pass; multi-monitor stories 5,6,10 pass with Virtual-2/3

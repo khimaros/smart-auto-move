@@ -196,8 +196,8 @@ function occupiedSlotWorkspace(m, winid) {
     m.destroy()
 }
 
-// SOURCE FIX: a runtime saved-windows reapply (external prefs/client write)
-// must not strand a settled window. Without occupancy preservation the window's
+// source fix: a runtime saved-windows reapply (external prefs/client write)
+// must not strand a settled window. without occupancy preservation the window's
 // next title change is misread as a new window and moved to another slot.
 {
     const m = makeMatcher([maxSlot('Alpha Window Title', 0), maxSlot('Bravo Window Title', 1)])
@@ -225,7 +225,7 @@ function occupiedSlotWorkspace(m, winid) {
     m.destroy()
 }
 
-// INVARIANT GUARD: even if occupancy is lost by some path the source fix does
+// invariant guard: even if occupancy is lost by some path the source fix does
 // not cover, a settled window must re-bind to its slot rather than be demoted to
 // PENDING, re-identified by its current title, and moved.
 {
