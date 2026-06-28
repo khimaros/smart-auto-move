@@ -67,8 +67,15 @@ const SETTING_HANDLERS = {
   "saved-windows": {
     type: "string",
     apply: (value, ext) => {
+      // block_signal_handler in _saveState is not reliable for dconf: the
+      // "changed" signal can be delivered asynchronously, after unblock (true on
+      // some glib/dconf versions). Also ignore a value equal to our own last
+      // write so the extension never reloads (restoreFromState) its own state;
+      // react only to genuine external edits (prefs dialog, external clients).
+      if (value === ext._lastSavedWindows) return;
       try {
         const newState = JSON.parse(value || "{}");
+        debug("extension", "saved-windows changed: reloading tracker state");
         ext._helper.getTracker()?.restoreFromState(newState);
       } catch (e) {
         debug("extension", `Error restoring state from GSettings: ${e.message}`, true);
@@ -153,11 +160,16 @@ export default class SmartAutoMove extends Extension {
   }
 
   _saveState(state) {
+    // remember exactly what we write so the saved-windows changed handler can
+    // ignore the asynchronous dconf echo of our own write; block_signal_handler
+    // alone does not suppress it reliably across glib/dconf versions
+    const json = JSON.stringify(state);
+    this._lastSavedWindows = json;
     if (this._settingsId) {
       this._settings.block_signal_handler(this._settingsId);
     }
     try {
-      this._settings.set_string("saved-windows", JSON.stringify(state));
+      this._settings.set_string("saved-windows", json);
     } catch (e) {
       debug("extension", `Error saving state: ${e.message}`, true);
     } finally {

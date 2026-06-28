@@ -59,6 +59,43 @@ function makeDetails(title, x = 400, y = 300) {
     }
 }
 
+// maximized variants: identical geometry on different workspaces, so the only
+// distinguishing property is the (volatile) title -- the real-world firefox case
+function maxSlot(title, ws) {
+    return {
+        occupied: null, seen: Date.now(),
+        props: {
+            wm_class: 'com.example.WindowBot', title, connectorPreference: ['Virtual-1'],
+            configs: [{
+                connector: 'Virtual-1', workspace: ws, minimized: false, maximized: 2,
+                relative_rect: { x: 0, y: 0, width: 1280, height: 1024 },
+            }],
+        },
+    }
+}
+
+function maxDetails(title, ws) {
+    return {
+        wm_class: 'com.example.WindowBot', title, monitor: 0, workspace: ws,
+        minimized: false, maximized: 2, fullscreen: false, on_all_workspaces: false,
+        above: false, window_type: 0, skip_taskbar: false,
+        frame_rect: { x: 0, y: 0, width: 1280, height: 1024 },
+    }
+}
+
+function settle(m, winid, details) {
+    m.onWindowModified(winid, 'window-created', details)
+    const ws = m._windowStates.get(winid)
+    ws.lastEventTime = Date.now() - 1000
+    m.processPendingWindows()
+    return ws
+}
+
+function occupiedSlotWorkspace(m, winid) {
+    const slot = m.knownWindows.find((w) => w.occupied === winid)
+    return slot ? slot.props.configs[0].workspace : null
+}
+
 // hasExactMatch must only fire on a true title + wm_class match
 {
     const m = makeMatcher([makeSlot(TITLE_LONG)])
@@ -155,6 +192,58 @@ function makeDetails(title, x = 400, y = 300) {
     check('exact match generates restore operations',
         result.operations.some((op) => op.type === 'Place'),
         JSON.stringify(result.operations))
+
+    m.destroy()
+}
+
+// SOURCE FIX: a runtime saved-windows reapply (external prefs/client write)
+// must not strand a settled window. Without occupancy preservation the window's
+// next title change is misread as a new window and moved to another slot.
+{
+    const m = makeMatcher([maxSlot('Alpha Window Title', 0), maxSlot('Bravo Window Title', 1)])
+    settle(m, 1, maxDetails('Alpha Window Title', 0))
+    settle(m, 2, maxDetails('Bravo Window Title', 1))
+
+    check('two maximized windows settled into TRACKING on their own slots',
+        m._windowStates.get(1).state === 'TRACKING' && m._windowStates.get(2).state === 'TRACKING' &&
+        occupiedSlotWorkspace(m, 1) === 0 && occupiedSlotWorkspace(m, 2) === 1)
+
+    // external reapply of saved state (this is what fires restoreFromState at runtime)
+    m.restoreFromState(m.getSerializableState())
+
+    check('occupancy preserved across saved-windows reapply',
+        m.knownWindows.some((w) => w.occupied === 1) && m.knownWindows.some((w) => w.occupied === 2))
+
+    // alpha's title now looks exactly like bravo's slot (user navigated)
+    const result = m.onWindowModified(1, 'notify::title', maxDetails('Bravo Window Title', 0))
+
+    check('no workspace move for settled window after reapply + title change',
+        !result.operations.some((op) => op.type === 'MoveToWorkspace'), JSON.stringify(result.operations))
+    check('settled window stayed on its own workspace after reapply',
+        occupiedSlotWorkspace(m, 1) === 0, `ws=${occupiedSlotWorkspace(m, 1)}`)
+
+    m.destroy()
+}
+
+// INVARIANT GUARD: even if occupancy is lost by some path the source fix does
+// not cover, a settled window must re-bind to its slot rather than be demoted to
+// PENDING, re-identified by its current title, and moved.
+{
+    const m = makeMatcher([maxSlot('Alpha Window Title', 0), maxSlot('Bravo Window Title', 1)])
+    settle(m, 1, maxDetails('Alpha Window Title', 0))
+    settle(m, 2, maxDetails('Bravo Window Title', 1))
+
+    // forcibly strand both windows: occupancy lost, state machine still TRACKING
+    for (const w of m.knownWindows) w.occupied = null
+
+    const result = m.onWindowModified(1, 'notify::title', maxDetails('Bravo Window Title', 0))
+
+    check('stranded settled window re-binds without a workspace move',
+        !result.operations.some((op) => op.type === 'MoveToWorkspace'), JSON.stringify(result.operations))
+    check('stranded window re-bound to its own (alpha) slot, not bravo',
+        occupiedSlotWorkspace(m, 1) === 0, `ws=${occupiedSlotWorkspace(m, 1)}`)
+    check('stranded window stayed TRACKING (never demoted to PENDING)',
+        m._windowStates.get(1).state === 'TRACKING', `state=${m._windowStates.get(1).state}`)
 
     m.destroy()
 }

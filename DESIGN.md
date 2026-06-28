@@ -80,6 +80,14 @@ identity. operations originate from exactly two sources in this state:
 - a user-initiated monitor move (`_handleUserMonitorChange`), which records
   the connector preference and restores that connector's saved config
 
+corollary: a window is only ever demoted from TRACKING to PENDING if it is a
+genuinely new window id; an already-tracked window that has lost its slot
+occupancy out-of-band (see persistence) is re-bound to its slot by its PRIOR
+identity (`_rebindKnownWindow`) and stays settled. it is never re-identified by
+its current, possibly mid-navigation, title -- that would let several visually
+identical windows (e.g. maximized firefox windows distinguished only by title)
+be matched onto each other's slots and moved across workspaces.
+
 ## identity matching
 
 - slots (`knownWindows`): `{ occupied: winid|null, props: { wm_class, title,
@@ -110,3 +118,11 @@ every state change serializes `knownWindows` through the onStateChange
 callback; the extension writes it to the `saved-windows` gsettings key with
 its own change signal blocked to avoid feedback loops. freeze-saves flips
 the session read-only.
+
+a `saved-windows` change from any other writer (the prefs dialog, an external
+client) still fires the handler, which calls `restoreFromState` on the live
+tracker. that rebuild carries the occupancy of currently-live windows across
+the reload, keyed by identity, so a runtime reapply cannot strand a settled
+window and trigger a spurious re-match. (at enable time the tracker is fresh
+and empty, so occupancy is established by the constructor's actor query
+instead.)

@@ -1,6 +1,33 @@
 # ROADMAP
 
 ```
+[x] fix settled (TRACKING) windows spontaneously moved to another window's
+    workspace after a saved-windows reapply. restoreFromState() (fired by the
+    saved-windows GSettings changed handler, and on re-init) resets every
+    slot's `occupied` to null WITHOUT re-matching, while the per-window state
+    machine stays TRACKING. the next title change on a settled window is then
+    handled as "new window detected", re-matched against the saved pool, and
+    for visually identical maximized windows (eg several firefox windows
+    distinguished only by volatile titles) lands on the wrong slot and issues
+    a cross-workspace move. violates the settled-windows invariant.
+    [x] failing e2e test (story 13) reproducing the spontaneous move (RED: alpha
+        migrates ws1 -> ws2 on title change after a saved-windows reapply)
+    [x] source fix: restoreFromState carries live-window occupancy across a
+        reload, keyed by identity, so a runtime reapply can't strand a window
+    [x] invariant guard: onWindowModified never demotes an already-tracked
+        window to PENDING; re-binds it by prior identity (_rebindKnownWindow)
+    [x] matcher unit tests for both paths (fail against pre-fix matcher)
+    [x] trigger hardening: _saveState records its last write; the saved-windows
+        handler ignores a value equal to it, so the extension never reloads its
+        own writes even where block_signal_handler leaks. story 14 guards it
+        (passes; self-writes are deduped in-process anyway, so it is belt-and-
+        suspenders). real-world trigger still under investigation -- no periodic
+        cleanup timer exists; only external different-value writes reload. see
+        [[occupancy-wipe-spontaneous-move]].
+    [x] verify in VM: full suite green (22/22) with the hardened build. single-
+        monitor stories all pass; multi-monitor stories 5,6,10 pass with Virtual-2/3
+        attached via virt-viewer. headless head provisioning is not feasible here
+        -- see [[multimonitor-head-provisioning]].
 [@] reusable core shared with window-control extension
 [x] fix TRACKING windows still migrated/moved on title change within 15s of settling
 [x] fix hasExactMatch operator precedence bug causing premature window matching
