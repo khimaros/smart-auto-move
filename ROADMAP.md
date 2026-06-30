@@ -40,7 +40,7 @@
     [x] monitor-baseline isolation so a failed monitor test cannot cascade
 [ ] incorporate useful features and fixes from popular fork
     https://github.com/ChrisLauinger77/gnome-shell-extension-SmartAutoMoveNG
-[ ] support gnome-shell 50 (declare shell-version 50; audit for removed APIs:
+[x] support gnome-shell 50 (declare shell-version 50; audit for removed APIs:
     keyboardManager hold/releaseKeyboard, global.display restart signals,
     RunDialog._restart; see gjs.guide/extensions/upgrading/gnome-shell-50)
     [x] declare shell-version 50 in both extensions; audit found no removed
